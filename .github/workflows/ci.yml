@@ -49,4 +49,4 @@ jobs:
         run: uv sync --extra dev
 
       - name: Run unit + e2e with coverage gate
-        run: PYTHONPATH=src uv run pytest -q --cov=src/sackmesser --cov-report=term-missing --cov-fail-under=75 tests/unit tests/e2e
+        run: PYTHONPATH=src uv run pytest -q --cov=src/sackmesser --cov-report=term-missing --cov-fail-under=85 tests/unit tests/e2e

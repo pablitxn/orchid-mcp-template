@@ -76,7 +76,7 @@ PYTHONPATH=src uv run --extra dev pytest -q --cov=src/sackmesser --cov-report=te
 Coverage con gate (alineado a CI):
 
 ```bash
-PYTHONPATH=src uv run --extra dev pytest -q --cov=src/sackmesser --cov-report=term-missing --cov-fail-under=75 tests/unit tests/e2e
+PYTHONPATH=src uv run --extra dev pytest -q --cov=src/sackmesser --cov-report=term-missing --cov-fail-under=85 tests/unit tests/e2e
 ```
 
 ## Endpoints incluidos
