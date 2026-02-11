@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import pytest
 from orchid_commons import RedisCache, RedisSettings
 
@@ -20,6 +22,8 @@ async def test_redis_cache_repository_integration() -> None:
             )
         )
     except Exception as exc:  # pragma: no cover - environment dependent
+        if os.environ.get("REQUIRE_INTEGRATION_SERVICES") == "1":
+            raise
         pytest.skip(f"Redis not available: {exc}")
 
     try:

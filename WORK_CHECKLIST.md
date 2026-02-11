@@ -68,7 +68,7 @@
 
 - [ ] Definir matriz de escenarios de modulos.
 - [ ] Ejecutar `ruff`, `mypy`, unit, e2e en CI por PR.
-- [ ] Ejecutar integration en job con Docker.
+- [x] Ejecutar integration en job con Docker.
 - [ ] Publicar guia final de setup + poda por escenario.
 
 ## Comandos de verificacion rapida

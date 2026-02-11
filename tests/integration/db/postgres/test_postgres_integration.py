@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import pytest
 from orchid_commons import PostgresProvider, PostgresSettings
 
@@ -23,6 +25,8 @@ async def test_postgres_workflow_repository_integration() -> None:
             )
         )
     except Exception as exc:  # pragma: no cover - environment dependent
+        if os.environ.get("REQUIRE_INTEGRATION_SERVICES") == "1":
+            raise
         pytest.skip(f"Postgres not available: {exc}")
 
     try:

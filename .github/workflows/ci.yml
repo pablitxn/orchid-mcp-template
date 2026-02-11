@@ -50,3 +50,71 @@ jobs:
 
       - name: Run unit + e2e with coverage gate
         run: PYTHONPATH=src uv run pytest -q --cov=src/sackmesser --cov-report=term-missing --cov-fail-under=85 tests/unit tests/e2e
+
+  integration:
+    name: Integration (Postgres + Redis)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: orchid_template
+          POSTGRES_USER: orchid
+          POSTGRES_PASSWORD: orchid
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U orchid -d orchid_template"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Wait for Postgres and Redis
+        run: |
+          python - <<'PY'
+          import socket
+          import time
+
+          def wait_for_port(host: str, port: int, service: str, timeout: int = 60) -> None:
+              deadline = time.time() + timeout
+              while time.time() < deadline:
+                  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                      sock.settimeout(1)
+                      try:
+                          sock.connect((host, port))
+                          print(f"{service} ready on {host}:{port}")
+                          return
+                      except OSError:
+                          time.sleep(1)
+              raise SystemExit(f"Timed out waiting for {service} on {host}:{port}")
+
+          wait_for_port("127.0.0.1", 5432, "postgres")
+          wait_for_port("127.0.0.1", 6379, "redis")
+          PY
+
+      - name: Run integration tests
+        env:
+          REQUIRE_INTEGRATION_SERVICES: "1"
+        run: PYTHONPATH=src uv run pytest -q -m integration tests/integration

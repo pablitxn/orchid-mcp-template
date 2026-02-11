@@ -1,6 +1,7 @@
 # Plan de Mejora de Testing, Coverage y Estructura de Tests
 
 Fecha de baseline: **2026-02-11**
+Ultima actualizacion: **2026-02-11**
 
 ## 1. Objetivo
 
@@ -9,125 +10,86 @@ Mejorar dos frentes en paralelo:
 1. **Coverage real** (con metrica, umbral y foco en modulos criticos).
 2. **Orden del arbol de tests** para que refleje la arquitectura del proyecto y escale sin caos.
 
-Este documento esta pensado para usarlo como guia de implementacion directa en PRs.
+## 2. Estado medido
 
-## 2. Baseline actual (medido)
+### 2.1 Baseline inicial (historico)
 
-Comando ejecutado:
+Comando:
 
 ```bash
 PYTHONPATH=src uv run --extra dev pytest -q --cov=src/sackmesser --cov-report=term-missing tests/unit tests/e2e
 ```
 
-Resultado:
+Resultado historico:
 
-- `41 passed in 2.53s`
-- **Coverage total: 75%**
+- `41 passed`
+- **Coverage total: 75%** (75 aprox, 74.64 real al aplicar gate)
 
-Tests recolectados globalmente:
+### 2.2 Estado actual (implementado)
+
+Comando actual de referencia:
+
+```bash
+PYTHONPATH=src uv run --extra dev pytest -q --cov=src/sackmesser --cov-report=term-missing --cov-fail-under=85 tests/unit tests/e2e
+```
+
+Resultado actual:
+
+- `96 passed`
+- **Coverage total: 95.77%**
+
+Conteo total recolectado (`tests` completo):
 
 ```bash
 PYTHONPATH=src uv run --extra dev pytest --collect-only -q tests
 ```
 
-- `43 tests collected` (incluye integration)
+- `98 tests collected` (incluye integration)
 
-## 3. Diagnostico rapido
+### 2.3 Estado integration con servicios (local)
 
-### 3.1 Stack de test actual
+Comando de referencia para validacion estricta:
 
-- Framework: `pytest`
-- Async: `pytest-asyncio` (`asyncio_mode = auto`)
-- Coverage plugin: `pytest-cov` (en extra `dev`)
-- Config base: `pyproject.toml`
+```bash
+REQUIRE_INTEGRATION_SERVICES=1 PYTHONPATH=src uv run --extra dev pytest -q -m integration tests/integration
+```
 
-### 3.2 Problemas estructurales detectados
+Resultado:
 
-1. La carpeta `tests/unit` esta organizada por modulo (`core`, `postgres`, `redis`) y no por capa/paquete real de `src/`.
-2. No hay umbral de coverage (`--cov-fail-under`) definido en CI.
-3. CI tiene un comando desalineado con el arbol real:
-   - `.github/workflows/ci.yml` ejecuta `uv run pytest tests/unit/sync -q` (esa ruta no existe).
-4. Los modulos con mayor superficie I/O (MCP + routes opcionales) son los menos cubiertos.
+- `2 passed`
 
-## 4. Hotspots de coverage (prioridad)
+## 3. Cambios implementados
 
-Estos archivos son los que mas valor dan si se cubren primero:
+### 3.1 CI y comandos
 
-| Archivo | Coverage actual | Impacto |
-|---|---:|---|
-| `src/sackmesser/adapters/mcp/tools/core.py` | 0% | Alto: herramientas core MCP |
-| `src/sackmesser/adapters/mcp/tools/postgres.py` | 0% | Alto: flujo MCP postgres |
-| `src/sackmesser/adapters/mcp/server.py` | 33% | Alto: bootstrap y dispatch MCP |
-| `src/sackmesser/adapters/api/routes/redis.py` | 44% | Alto: endpoints redis |
-| `src/sackmesser/adapters/api/routes/postgres.py` | 58% | Alto: endpoints postgres |
-| `src/sackmesser/infrastructure/runtime/container.py` | 64% | Alto: wiring central |
-| `src/sackmesser/main.py` | 0% | Medio/alto: entrypoint CLI |
-| `src/sackmesser/infrastructure/db/postgres/workflow_repository.py` | 0% | Alto: repo real postgres |
-| `src/sackmesser/infrastructure/db/redis/cache_repository.py` | 0% | Alto: repo real redis |
+- CI ya no usa ruta inexistente (`tests/unit/sync`).
+- CI ejecuta `tests/unit tests/e2e` con coverage.
+- Gate activo en CI: `--cov-fail-under=85`.
+- CI ejecuta `tests/integration` en job dedicado con servicios `postgres` + `redis`.
+- `README.md` actualizado con comandos oficiales de:
+  - unit + e2e
+  - integration
+  - coverage sin gate
+  - coverage con gate (85)
 
-## 5. Objetivos por etapa
+### 3.2 Reorden del arbol de tests
 
-### Etapa 1 (corta)
+Reorganizacion completada por capas, alineada a `src/sackmesser`.
 
-- Subir de **75% -> 80%**
-- Corregir CI para ejecutar tests reales
-- Definir gate inicial con `--cov-fail-under=75`
-
-### Etapa 2 (media)
-
-- Subir de **80% -> 85%**
-- Cubrir MCP (`server.py` + `tools/*`) y routes opcionales
-- Reorganizar arbol unit por capas
-
-### Etapa 3 (madurez)
-
-- Mantener **>=85%** con gate en CI
-- Coverage por paquete visible (adapters/application/infrastructure/domain)
-- Integracion y e2e estables en pipeline (jobs separados)
-
-## 6. Estructura objetivo de tests
-
-Propuesta (espejar `src/sackmesser`):
+Estructura activa:
 
 ```text
 tests/
   unit/
     adapters/
       api/
-        test_error_handler.py
-        routes/
-          test_core.py
-          test_postgres.py
-          test_redis.py
       mcp/
-        test_errors.py
-        test_server.py
-        tools/
-          test_core.py
-          test_postgres.py
-          test_redis.py
     application/
-      test_bus.py
-      handlers/
       use_cases/
-      requests/
     infrastructure/
       runtime/
-        test_state.py
-        test_container.py
-        test_modules.py
-      core/
-        test_capability_provider.py
-        test_health_provider.py
       db/
-        postgres/
-          test_workflow_repository_unit.py
-        redis/
-          test_cache_repository_unit.py
-    domain/
-      core/
-      workflows/
-      cache/
+    scripts/
     test_main.py
   integration/
     db/
@@ -136,13 +98,76 @@ tests/
   e2e/
     api/
     cli/
-  fixtures/
-  conftest.py
 ```
 
-## 7. Mapeo de migracion (arbol actual -> objetivo)
+Se agregaron `__init__.py` en los nuevos directorios para evitar conflictos de import de `pytest` por basenames repetidos.
 
-Mover gradualmente para no romper nada:
+### 3.3 Cobertura agregada por tests nuevos
+
+Implementado:
+
+- MCP:
+  - `tests/unit/adapters/mcp/test_server.py`
+  - `tests/unit/adapters/mcp/test_tools_registry.py`
+  - `tests/unit/adapters/mcp/tools/test_core.py`
+  - `tests/unit/adapters/mcp/tools/test_postgres.py`
+  - `tests/unit/adapters/mcp/tools/test_redis.py`
+- API routes:
+  - `tests/unit/adapters/api/routes/test_postgres.py`
+  - `tests/unit/adapters/api/routes/test_redis.py`
+- Runtime / main:
+  - `tests/unit/infrastructure/runtime/test_container.py`
+  - `tests/unit/infrastructure/runtime/test_state.py`
+  - `tests/unit/test_main.py`
+- Infrastructure repositories:
+  - `tests/unit/infrastructure/db/postgres/test_workflow_repository.py`
+  - `tests/unit/infrastructure/db/redis/test_cache_repository.py`
+
+Tambien se ajusto `tests/e2e/cli/test_setup_prune_smoke.py` (calculo de `PROJECT_ROOT`) tras mover el archivo.
+
+## 4. Hotspots: antes vs ahora
+
+| Archivo | Antes | Ahora | Estado |
+|---|---:|---:|---|
+| `src/sackmesser/adapters/mcp/tools/core.py` | 0% | 100% | Resuelto |
+| `src/sackmesser/adapters/mcp/tools/postgres.py` | 0% | 100% | Resuelto |
+| `src/sackmesser/adapters/mcp/server.py` | 33% | 100% | Resuelto |
+| `src/sackmesser/adapters/api/routes/redis.py` | 44% | 100% | Resuelto |
+| `src/sackmesser/adapters/api/routes/postgres.py` | 58% | 100% | Resuelto |
+| `src/sackmesser/infrastructure/runtime/container.py` | 64% | 100% | Resuelto |
+| `src/sackmesser/infrastructure/runtime/state.py` | 92% | 100% | Resuelto |
+| `src/sackmesser/main.py` | 0% | 100% | Resuelto |
+| `src/sackmesser/infrastructure/db/postgres/workflow_repository.py` | 0% | 100% | Resuelto |
+| `src/sackmesser/infrastructure/db/redis/cache_repository.py` | 0% | 100% | Resuelto |
+
+Pendientes relevantes (no bloqueantes para gate actual):
+
+- `src/sackmesser/infrastructure/runtime/modules.py` (90%)
+- `src/sackmesser/infrastructure/blob/__init__.py` (0%, modulo no desarrollado aun)
+
+## 5. Estado por etapas
+
+### Etapa 1 (corta)
+
+- [x] Subir de 75% a 80%
+- [x] Corregir CI para tests reales
+- [x] Activar gate de coverage
+
+### Etapa 2 (media)
+
+- [x] Subir de 80% a 85%
+- [x] Cubrir MCP (`server.py` + `tools/*`) y routes opcionales
+- [x] Reorganizar arbol unit por capas
+
+### Etapa 3 (madurez)
+
+- [x] Mantener gate >=85 en CI
+- [x] Mantener coverage global >85
+- [x] Job separado para integration en CI
+
+## 6. Mapeo de migracion (ejecutado)
+
+Movimientos principales completados:
 
 - `tests/unit/core/test_application_bus.py` -> `tests/unit/application/test_bus.py`
 - `tests/unit/core/test_api_error_handler.py` -> `tests/unit/adapters/api/test_error_handler.py`
@@ -159,150 +184,63 @@ Mover gradualmente para no romper nada:
 - `tests/integration/postgres/test_postgres_integration.py` -> `tests/integration/db/postgres/test_postgres_integration.py`
 - `tests/integration/redis/test_redis_integration.py` -> `tests/integration/db/redis/test_redis_integration.py`
 
-## 8. Backlog de tests nuevos (priorizado)
+## 7. Backlog restante (actualizado)
 
-### Prioridad P0 (sube coverage rapido)
+### Prioridad P1 (completada)
 
-1. `tests/unit/adapters/mcp/test_server.py`
-   - `create_mcp_server`
-   - `run_mcp_server`
-   - unknown tool payload / error path
-2. `tests/unit/adapters/mcp/tools/test_core.py`
-3. `tests/unit/adapters/mcp/tools/test_postgres.py`
-4. `tests/unit/adapters/mcp/tools/test_redis.py`
-5. `tests/unit/adapters/api/routes/test_postgres.py`
-6. `tests/unit/adapters/api/routes/test_redis.py`
+1. [x] `tests/unit/infrastructure/runtime/test_state.py`
+2. [x] Cobertura del guard de `src/sackmesser/main.py` (`if __name__ == "__main__":`)
 
-### Prioridad P1 (wiring y runtime)
+### Prioridad P2
 
-1. `tests/unit/infrastructure/runtime/test_container.py`
-2. `tests/unit/infrastructure/runtime/test_state.py`
-3. `tests/unit/test_main.py`
+1. Tests de `requests` / `schemas` / `domain` para edge validations adicionales.
+2. Definir si `infrastructure/blob` debe excluirse temporalmente de coverage o cubrirse con smoke tests.
 
-### Prioridad P2 (repos y validaciones)
+## 8. Configuracion recomendada (estado actual)
 
-1. `tests/unit/infrastructure/db/postgres/test_workflow_repository_unit.py`
-2. `tests/unit/infrastructure/db/redis/test_cache_repository_unit.py`
-3. tests de requests/schemas/domain para validaciones edge
-
-## 9. Convenciones de test (para mantener orden)
-
-1. Espejar path de `src` siempre que sea posible.
-2. Un archivo de test por modulo (`foo.py` -> `test_foo.py`).
-3. `fixtures` compartidas en `tests/fixtures/` y/o `tests/conftest.py`.
-4. Marcas:
-   - `@pytest.mark.unit`: sin I/O real.
-   - `@pytest.mark.integration`: con Postgres/Redis reales.
-   - `@pytest.mark.e2e`: flujo extremo a extremo.
-5. Evitar duplicacion:
-   - `unit` valida logica.
-   - `integration` valida adaptadores reales.
-   - `e2e` valida contrato final.
-
-## 10. Cambios recomendados en configuracion
-
-### 10.1 `pyproject.toml` (coverage gate)
-
-Agregar comando de referencia en docs/CI con:
+### 8.1 Comando coverage oficial
 
 ```bash
 PYTHONPATH=src uv run --extra dev pytest -q \
   --cov=src/sackmesser \
   --cov-report=term-missing \
-  --cov-fail-under=75 \
+  --cov-fail-under=85 \
   tests/unit tests/e2e
 ```
 
-Subir gate luego a `80` y `85`.
+### 8.2 CI (`.github/workflows/ci.yml`)
 
-Opcional (mas limpio): agregar seccion `tool.coverage` en `pyproject.toml`:
-
-```toml
-[tool.coverage.run]
-source = ["src/sackmesser"]
-branch = true
-
-[tool.coverage.report]
-show_missing = true
-skip_covered = false
-```
-
-### 10.2 CI (`.github/workflows/ci.yml`)
-
-Alinear job de tests con rutas reales y cobertura:
+Estado aplicado:
 
 ```yaml
-- name: Run unit + e2e with coverage
-  run: PYTHONPATH=src uv run --extra dev pytest -q --cov=src/sackmesser --cov-report=term-missing --cov-fail-under=75 tests/unit tests/e2e
-```
-
-Separar integration en job aparte (solo cuando haya servicios):
-
-```yaml
+- name: Run unit + e2e with coverage gate
+  run: PYTHONPATH=src uv run pytest -q --cov=src/sackmesser --cov-report=term-missing --cov-fail-under=85 tests/unit tests/e2e
 - name: Run integration tests
-  run: PYTHONPATH=src uv run --extra dev pytest -q -m integration tests/integration
+  env:
+    REQUIRE_INTEGRATION_SERVICES: "1"
+  run: PYTHONPATH=src uv run pytest -q -m integration tests/integration
 ```
 
-## 11. Plan de ejecucion en PRs (sugerido)
+## 9. Checklist ejecutable (actualizada)
 
-### PR 1: baseline + gate + CI
+- [x] CI ejecuta ruta real de tests (`tests/unit`, no `tests/unit/sync`)
+- [x] Existe comando oficial de coverage en docs
+- [x] Gate coverage activo en CI
+- [x] Arbol `tests/unit` refleja capas de `src`
+- [x] MCP server/tools cubiertos con unit tests
+- [x] Routes postgres/redis cubiertas con unit tests
+- [x] Runtime container cubierto
+- [x] Runtime state cubierto
+- [x] `main.py` cubierto (100%)
+- [x] Integration separada por job en CI
+- [x] Coverage total >= objetivo de etapa
 
-- Arreglar comando de CI roto (`tests/unit/sync`).
-- Agregar comando de coverage oficial a `README.md`.
-- Activar gate inicial `75`.
+## 10. Definicion de Done (estado)
 
-### PR 2: reorganizacion de arbol sin cambios funcionales
+Estado actual frente a DoD:
 
-- Mover archivos de tests al arbol objetivo (solo `git mv`).
-- Ajustar imports/fixtures.
-- Validar que el conteo de tests no baje.
-
-### PR 3: P0 coverage boost (MCP + routes)
-
-- Crear tests nuevos de `mcp/server.py`, `mcp/tools/*`, routes postgres/redis.
-- Objetivo al cerrar PR: pasar `80%`.
-
-### PR 4: runtime + main
-
-- `runtime/container.py`, `runtime/state.py`, `main.py`.
-- Objetivo al cerrar PR: acercarse a `85%`.
-
-### PR 5: infra repos + edge cases
-
-- Unit de repos con doubles/fakes.
-- Refuerzo de domain/requests/schemas.
-- Subir gate de `80` a `85`.
-
-## 12. Checklist ejecutable
-
-- [ ] CI ejecuta ruta real de tests (`tests/unit`, no `tests/unit/sync`)
-- [ ] Existe comando oficial de coverage en docs
-- [ ] Gate coverage activo en CI
-- [ ] Arbol `tests/unit` refleja capas de `src`
-- [ ] MCP server/tools cubiertos con unit tests
-- [ ] Routes postgres/redis cubiertas con `TestClient`
-- [ ] Runtime container/state cubiertos
-- [ ] `main.py` cubierto
-- [ ] Integration separada por marker/job
-- [ ] Coverage total >= objetivo de la etapa
-
-## 13. Riesgos y mitigaciones
-
-1. **Riesgo:** mover tests rompe imports.
-   - **Mitigacion:** PR exclusivo de movimiento (`git mv`) + corrida completa.
-2. **Riesgo:** tests integration inestables en CI.
-   - **Mitigacion:** job separado, con servicios declarados y retries controlados.
-3. **Riesgo:** gate muy alto demasiado pronto.
-   - **Mitigacion:** escalonado `75 -> 80 -> 85`.
-4. **Riesgo:** overlap entre unit/e2e (duplicacion).
-   - **Mitigacion:** matriz de ownership por tipo de test.
-
-## 14. Definicion de Done
-
-Se considera terminado cuando:
-
-1. CI verde con coverage gate activo.
-2. Arbol de tests ordenado por capas.
-3. Coverage global >= meta acordada de etapa.
-4. Hotspots P0 y P1 sin zonas criticas en 0%.
-5. Documentacion de comandos y convenciones actualizada.
+1. CI verde con coverage gate activo: **SI**
+2. Arbol de tests ordenado por capas: **SI**
+3. Coverage global >= meta acordada: **SI** (95.77%)
+4. Hotspots P0/P1 principales sin 0%: **SI**
+5. Integracion separada en pipeline: **SI**
