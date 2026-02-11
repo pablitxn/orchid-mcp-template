@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import runpy
+import sys
 from argparse import Namespace
 from types import SimpleNamespace
 
@@ -100,3 +102,17 @@ def test_main_runs_api_branch(monkeypatch: pytest.MonkeyPatch) -> None:
     main_module.main()
 
     assert events == ["api:True"]
+
+
+def test_main_module_entrypoint_executes_main_guard(monkeypatch: pytest.MonkeyPatch) -> None:
+    events: list[str] = []
+
+    async def fake_run_mcp_server() -> None:
+        events.append("mcp_server")
+
+    monkeypatch.setattr(sys, "argv", ["sackmesser.main", "--mcp"])
+    monkeypatch.setattr("sackmesser.adapters.mcp.run_mcp_server", fake_run_mcp_server)
+
+    runpy.run_path(main_module.__file__, run_name="__main__")
+
+    assert events == ["mcp_server"]
