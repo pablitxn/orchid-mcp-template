@@ -258,6 +258,20 @@ def test_find_missing_optional_dependencies_by_module(
     }
 
 
+def test_find_missing_optional_dependencies_handles_missing_parent_package(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _fake_find_spec(name: str) -> object | None:
+        if name == "redis.asyncio":
+            raise ModuleNotFoundError("No module named 'redis'")
+        return object()
+
+    monkeypatch.setattr(setup_template, "find_spec", _fake_find_spec)
+    missing = setup_template.find_missing_optional_dependencies({"core", "redis"})
+
+    assert missing == {"redis": ("redis.asyncio",)}
+
+
 def test_print_dependency_diagnostics_strict_returns_failure(capsys: pytest.CaptureFixture[str]) -> None:
     should_fail = setup_template.print_dependency_diagnostics(
         {"postgres": ("asyncpg",)},

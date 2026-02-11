@@ -290,9 +290,20 @@ def find_missing_optional_dependencies(
     enabled_modules: set[str],
 ) -> dict[str, tuple[str, ...]]:
     missing: dict[str, tuple[str, ...]] = {}
+
+    def _is_import_available(import_path: str) -> bool:
+        try:
+            return find_spec(import_path) is not None
+        except ModuleNotFoundError:
+            return False
+
     for module_name in sorted(enabled_modules):
         import_paths = MODULE_IMPORT_CHECKS.get(module_name, ())
-        missing_for_module = tuple(path for path in import_paths if find_spec(path) is None)
+        missing_for_module = tuple(
+            path
+            for path in import_paths
+            if not _is_import_available(path)
+        )
         if missing_for_module:
             missing[module_name] = missing_for_module
     return missing
