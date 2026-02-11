@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from sackmesser.application.postgres import CreateWorkflowCommand, ListWorkflowsQuery
 from sackmesser.adapters.mcp.errors import MCPToolError
+from sackmesser.application.workflows import CreateWorkflowCommand, ListWorkflowsQuery
 from sackmesser.infrastructure.runtime.container import ApplicationContainer
 
 from .common import ToolSpec
@@ -16,8 +16,7 @@ async def create_workflow_tool(
     arguments: dict[str, Any],
 ) -> dict[str, Any]:
     """Create a Postgres workflow."""
-    handler = container.create_workflow_handler
-    if handler is None:
+    if "postgres" not in container.enabled_modules:
         raise MCPToolError(
             code="module_disabled",
             message="Module 'postgres' is disabled",
@@ -28,7 +27,7 @@ async def create_workflow_tool(
         title=arguments["title"],
         payload=arguments.get("payload", {}),
     )
-    return (await handler.handle(command)).model_dump()
+    return (await container.command_bus.dispatch(command)).model_dump()
 
 
 async def list_workflows_tool(
@@ -36,8 +35,7 @@ async def list_workflows_tool(
     arguments: dict[str, Any],
 ) -> dict[str, Any]:
     """List Postgres workflows."""
-    handler = container.list_workflows_handler
-    if handler is None:
+    if "postgres" not in container.enabled_modules:
         raise MCPToolError(
             code="module_disabled",
             message="Module 'postgres' is disabled",
@@ -48,7 +46,7 @@ async def list_workflows_tool(
         limit=arguments.get("limit", 20),
         offset=arguments.get("offset", 0),
     )
-    return (await handler.handle(query)).model_dump()
+    return (await container.query_bus.dispatch(query)).model_dump()
 
 
 def get_tool_specs() -> list[ToolSpec]:

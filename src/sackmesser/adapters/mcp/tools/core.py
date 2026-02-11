@@ -13,7 +13,7 @@ async def health_check_tool(
     _arguments: dict[str, object],
 ) -> dict[str, object]:
     """Return health report from ResourceManager."""
-    result = await container.get_health_handler.handle(GetHealthQuery())
+    result = await container.query_bus.dispatch(GetHealthQuery())
     return result.payload
 
 
@@ -22,7 +22,7 @@ async def list_capabilities_tool(
     _arguments: dict[str, object],
 ) -> dict[str, object]:
     """Return enabled capabilities."""
-    result = await container.get_capabilities_handler.handle(GetCapabilitiesQuery())
+    result = await container.query_bus.dispatch(GetCapabilitiesQuery())
     return result.model_dump()
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from sackmesser.adapters.mcp.errors import MCPToolError
-from sackmesser.application.redis import (
+from sackmesser.application.cache import (
     DeleteCacheEntryCommand,
     GetCacheEntryQuery,
     SetCacheEntryCommand,
@@ -20,8 +20,7 @@ async def cache_set_tool(
     arguments: dict[str, Any],
 ) -> dict[str, Any]:
     """Set cache entry in Redis."""
-    handler = container.set_cache_entry_handler
-    if handler is None:
+    if "redis" not in container.enabled_modules:
         raise MCPToolError(
             code="module_disabled",
             message="Module 'redis' is disabled",
@@ -33,7 +32,7 @@ async def cache_set_tool(
         value=arguments["value"],
         ttl_seconds=arguments.get("ttl_seconds"),
     )
-    return (await handler.handle(command)).model_dump()
+    return (await container.command_bus.dispatch(command)).model_dump()
 
 
 async def cache_get_tool(
@@ -41,8 +40,7 @@ async def cache_get_tool(
     arguments: dict[str, Any],
 ) -> dict[str, Any]:
     """Get cache entry in Redis."""
-    handler = container.get_cache_entry_handler
-    if handler is None:
+    if "redis" not in container.enabled_modules:
         raise MCPToolError(
             code="module_disabled",
             message="Module 'redis' is disabled",
@@ -50,7 +48,7 @@ async def cache_get_tool(
         )
 
     query = GetCacheEntryQuery(key=arguments["key"])
-    result = await handler.handle(query)
+    result = await container.query_bus.dispatch(query)
     if not result.entry.found:
         raise MCPToolError(
             code="cache_not_found",
@@ -65,8 +63,7 @@ async def cache_delete_tool(
     arguments: dict[str, Any],
 ) -> dict[str, Any]:
     """Delete cache entry in Redis."""
-    handler = container.delete_cache_entry_handler
-    if handler is None:
+    if "redis" not in container.enabled_modules:
         raise MCPToolError(
             code="module_disabled",
             message="Module 'redis' is disabled",
@@ -74,7 +71,7 @@ async def cache_delete_tool(
         )
 
     command = DeleteCacheEntryCommand(key=arguments["key"])
-    return (await handler.handle(command)).model_dump()
+    return (await container.command_bus.dispatch(command)).model_dump()
 
 
 def get_tool_specs() -> list[ToolSpec]:
