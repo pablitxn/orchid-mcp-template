@@ -44,6 +44,7 @@ data/
 !/config/appsettings.json
 !/config/appsettings.development.json
 !/config/appsettings.production.json
+!/config/enabled_modules.json
 
 # Logs
 *.log

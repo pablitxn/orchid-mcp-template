@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "modules": {
+    "core": {
+      "required": true,
+      "description": "Base service lifecycle, health, capability registry, shared contracts.",
+      "depends_on": [],
+      "commons_extras": [],
+      "api_endpoints": [
+        "GET /health",
+        "GET /api/v1/capabilities"
+      ],
+      "mcp_tools": [
+        "health_check",
+        "list_capabilities"
+      ],
+      "prune_paths": []
+    },
+    "postgres": {
+      "required": false,
+      "description": "Relational persistence examples with workflow aggregate.",
+      "depends_on": [
+        "core"
+      ],
+      "commons_extras": [
+        "db"
+      ],
+      "api_endpoints": [
+        "POST /api/v1/workflows",
+        "GET /api/v1/workflows"
+      ],
+      "mcp_tools": [
+        "create_workflow",
+        "list_workflows"
+      ],
+      "prune_paths": [
+        "src/sackmesser/domain/postgres",
+        "src/sackmesser/domain/ports/postgres_ports.py",
+        "src/sackmesser/application/postgres",
+        "src/sackmesser/infrastructure/postgres",
+        "src/sackmesser/adapters/api/routes/postgres.py",
+        "src/sackmesser/adapters/mcp/tools/postgres.py",
+        "tests/unit/postgres",
+        "tests/integration/postgres",
+        "tests/e2e/postgres"
+      ]
+    },
+    "redis": {
+      "required": false,
+      "description": "Cache and idempotency examples.",
+      "depends_on": [
+        "core"
+      ],
+      "commons_extras": [
+        "db"
+      ],
+      "api_endpoints": [
+        "PUT /api/v1/cache/{key}",
+        "GET /api/v1/cache/{key}",
+        "DELETE /api/v1/cache/{key}"
+      ],
+      "mcp_tools": [
+        "cache_set",
+        "cache_get",
+        "cache_delete"
+      ],
+      "prune_paths": [
+        "src/sackmesser/domain/redis",
+        "src/sackmesser/domain/ports/redis_ports.py",
+        "src/sackmesser/application/redis",
+        "src/sackmesser/infrastructure/redis",
+        "src/sackmesser/adapters/api/routes/redis.py",
+        "src/sackmesser/adapters/mcp/tools/redis.py",
+        "tests/unit/redis",
+        "tests/integration/redis",
+        "tests/e2e/redis"
+      ]
+    },
+    "blob": {
+      "required": false,
+      "description": "S3-compatible object storage via MinIO/S3/R2 profiles.",
+      "depends_on": [
+        "core"
+      ],
+      "commons_extras": [
+        "blob"
+      ],
+      "api_endpoints": [
+        "POST /api/v1/assets/presign-upload",
+        "GET /api/v1/assets/{id}/download-url",
+        "DELETE /api/v1/assets/{id}"
+      ],
+      "mcp_tools": [
+        "asset_upload_url",
+        "asset_download_url",
+        "asset_delete"
+      ],
+      "prune_paths": [
+        "src/sackmesser/domain/blob",
+        "src/sackmesser/domain/ports/blob_ports.py",
+        "src/sackmesser/application/blob",
+        "src/sackmesser/infrastructure/blob",
+        "src/sackmesser/adapters/api/routes/blob.py",
+        "src/sackmesser/adapters/mcp/tools/blob.py",
+        "tests/unit/blob",
+        "tests/integration/blob",
+        "tests/e2e/blob"
+      ]
+    },
+    "mongodb": {
+      "required": false,
+      "description": "Document persistence examples.",
+      "depends_on": [
+        "core"
+      ],
+      "commons_extras": [
+        "db"
+      ],
+      "api_endpoints": [
+        "POST /api/v1/documents",
+        "GET /api/v1/documents/search"
+      ],
+      "mcp_tools": [
+        "create_document",
+        "search_documents"
+      ],
+      "prune_paths": [
+        "src/sackmesser/domain/mongodb",
+        "src/sackmesser/domain/ports/mongodb_ports.py",
+        "src/sackmesser/application/mongodb",
+        "src/sackmesser/infrastructure/mongodb",
+        "src/sackmesser/adapters/api/routes/mongodb.py",
+        "src/sackmesser/adapters/mcp/tools/mongodb.py",
+        "tests/unit/mongodb",
+        "tests/integration/mongodb",
+        "tests/e2e/mongodb"
+      ]
+    },
+    "qdrant": {
+      "required": false,
+      "description": "Vector indexing and similarity search examples.",
+      "depends_on": [
+        "core"
+      ],
+      "commons_extras": [
+        "db"
+      ],
+      "api_endpoints": [
+        "POST /api/v1/vectors/index",
+        "POST /api/v1/vectors/search"
+      ],
+      "mcp_tools": [
+        "index_vector",
+        "search_similar"
+      ],
+      "prune_paths": [
+        "src/sackmesser/domain/qdrant",
+        "src/sackmesser/domain/ports/qdrant_ports.py",
+        "src/sackmesser/application/qdrant",
+        "src/sackmesser/infrastructure/qdrant",
+        "src/sackmesser/adapters/api/routes/qdrant.py",
+        "src/sackmesser/adapters/mcp/tools/qdrant.py",
+        "tests/unit/qdrant",
+        "tests/integration/qdrant",
+        "tests/e2e/qdrant"
+      ]
+    },
+    "rabbitmq": {
+      "required": false,
+      "description": "Event publishing/consuming examples.",
+      "depends_on": [
+        "core"
+      ],
+      "commons_extras": [
+        "db"
+      ],
+      "api_endpoints": [
+        "POST /api/v1/events/publish"
+      ],
+      "mcp_tools": [
+        "publish_event"
+      ],
+      "prune_paths": [
+        "src/sackmesser/domain/rabbitmq",
+        "src/sackmesser/domain/ports/rabbitmq_ports.py",
+        "src/sackmesser/application/rabbitmq",
+        "src/sackmesser/infrastructure/rabbitmq",
+        "src/sackmesser/adapters/api/routes/rabbitmq.py",
+        "src/sackmesser/adapters/mcp/tools/rabbitmq.py",
+        "tests/unit/rabbitmq",
+        "tests/integration/rabbitmq",
+        "tests/e2e/rabbitmq"
+      ]
+    },
+    "observability": {
+      "required": false,
+      "description": "Metrics/tracing/logging examples (OTEL + Langfuse).",
+      "depends_on": [
+        "core"
+      ],
+      "commons_extras": [
+        "observability"
+      ],
+      "api_endpoints": [
+        "GET /metrics",
+        "GET /health/telemetry"
+      ],
+      "mcp_tools": [
+        "telemetry_ping"
+      ],
+      "prune_paths": [
+        "src/sackmesser/domain/observability",
+        "src/sackmesser/domain/ports/observability_ports.py",
+        "src/sackmesser/application/observability",
+        "src/sackmesser/infrastructure/observability",
+        "src/sackmesser/adapters/api/routes/observability.py",
+        "src/sackmesser/adapters/mcp/tools/observability.py",
+        "tests/unit/observability",
+        "tests/integration/observability",
+        "tests/e2e/observability"
+      ]
+    }
+  }
+}
