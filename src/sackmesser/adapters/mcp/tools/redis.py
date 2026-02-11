@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from sackmesser.adapters.mcp.errors import MCPToolError
-from sackmesser.application.cache import (
+from sackmesser.application.requests.cache import (
     DeleteCacheEntryCommand,
     GetCacheEntryQuery,
     SetCacheEntryCommand,

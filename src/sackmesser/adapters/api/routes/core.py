@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import APIRouter
 
 from sackmesser.adapters.dependencies import ContainerDep
-from sackmesser.application.core import GetCapabilitiesQuery, GetHealthQuery
+from sackmesser.application.requests.core import GetCapabilitiesQuery, GetHealthQuery
 
 router = APIRouter()
 

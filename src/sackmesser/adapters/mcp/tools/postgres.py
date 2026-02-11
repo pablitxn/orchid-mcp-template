@@ -5,7 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from sackmesser.adapters.mcp.errors import MCPToolError
-from sackmesser.application.workflows import CreateWorkflowCommand, ListWorkflowsQuery
+from sackmesser.application.requests.workflows import (
+    CreateWorkflowCommand,
+    ListWorkflowsQuery,
+)
 from sackmesser.infrastructure.runtime.container import ApplicationContainer
 
 from .common import ToolSpec

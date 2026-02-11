@@ -2,10 +2,10 @@
 
 from fastapi import APIRouter, Path
 
-from sackmesser.adapters.dependencies import ContainerDep
 from sackmesser.adapters.api.schemas import SetCacheRequest
+from sackmesser.adapters.dependencies import ContainerDep
 from sackmesser.application.errors import DisabledModuleError, NotFoundError
-from sackmesser.application.cache import (
+from sackmesser.application.requests.cache import (
     DeleteCacheEntryCommand,
     GetCacheEntryQuery,
     SetCacheEntryCommand,

@@ -34,9 +34,10 @@
         "list_workflows"
       ],
       "prune_paths": [
-        "src/sackmesser/domain/postgres",
-        "src/sackmesser/domain/ports/postgres_ports.py",
-        "src/sackmesser/application/postgres",
+        "src/sackmesser/domain/workflows",
+        "src/sackmesser/domain/ports/workflow_ports.py",
+        "src/sackmesser/application/requests/workflows.py",
+        "src/sackmesser/application/handlers/workflows.py",
         "src/sackmesser/infrastructure/postgres",
         "src/sackmesser/adapters/api/routes/postgres.py",
         "src/sackmesser/adapters/mcp/tools/postgres.py",
@@ -65,9 +66,10 @@
         "cache_delete"
       ],
       "prune_paths": [
-        "src/sackmesser/domain/redis",
-        "src/sackmesser/domain/ports/redis_ports.py",
-        "src/sackmesser/application/redis",
+        "src/sackmesser/domain/cache",
+        "src/sackmesser/domain/ports/cache_ports.py",
+        "src/sackmesser/application/requests/cache.py",
+        "src/sackmesser/application/handlers/cache.py",
         "src/sackmesser/infrastructure/redis",
         "src/sackmesser/adapters/api/routes/redis.py",
         "src/sackmesser/adapters/mcp/tools/redis.py",

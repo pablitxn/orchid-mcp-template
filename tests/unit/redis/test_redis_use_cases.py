@@ -1,16 +1,18 @@
-"""Unit tests for redis cache use cases."""
+"""Unit tests for cache request handlers."""
 
 from __future__ import annotations
 
-from sackmesser.application.redis import (
-    DeleteCacheEntryCommand,
-    DeleteCacheEntryUseCase,
-    GetCacheEntryQuery,
-    GetCacheEntryUseCase,
-    SetCacheEntryCommand,
-    SetCacheEntryUseCase,
+from sackmesser.application.handlers.cache import (
+    DeleteCacheEntryCommandHandler,
+    GetCacheEntryQueryHandler,
+    SetCacheEntryCommandHandler,
 )
-from sackmesser.domain.redis import CacheEntry
+from sackmesser.application.requests.cache import (
+    DeleteCacheEntryCommand,
+    GetCacheEntryQuery,
+    SetCacheEntryCommand,
+)
+from sackmesser.domain.cache import CacheEntry
 
 
 class _FakeCacheRepository:
@@ -29,13 +31,13 @@ class _FakeCacheRepository:
         return self._store.pop(key, None) is not None
 
 
-async def test_set_and_get_cache_use_cases() -> None:
+async def test_set_and_get_cache_handlers() -> None:
     repository = _FakeCacheRepository()
 
-    set_result = await SetCacheEntryUseCase(repository).execute(
+    set_result = await SetCacheEntryCommandHandler(repository).handle(
         SetCacheEntryCommand(key="alpha", value="1")
     )
-    get_result = await GetCacheEntryUseCase(repository).execute(
+    get_result = await GetCacheEntryQueryHandler(repository).handle(
         GetCacheEntryQuery(key="alpha")
     )
 
@@ -44,11 +46,11 @@ async def test_set_and_get_cache_use_cases() -> None:
     assert get_result.entry.value == "1"
 
 
-async def test_delete_cache_use_case() -> None:
+async def test_delete_cache_handler() -> None:
     repository = _FakeCacheRepository()
     await repository.set("alpha", "1")
 
-    result = await DeleteCacheEntryUseCase(repository).execute(
+    result = await DeleteCacheEntryCommandHandler(repository).handle(
         DeleteCacheEntryCommand(key="alpha")
     )
     assert result.success is True

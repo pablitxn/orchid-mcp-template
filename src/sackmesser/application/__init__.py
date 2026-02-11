@@ -2,23 +2,7 @@
 
 from importlib import import_module
 
-from sackmesser.application.bus import (
-    CommandBus,
-    Handler,
-    HandlerNotRegisteredError,
-    QueryBus,
-)
-from sackmesser.application.core import (
-    CapabilityDto,
-    GetCapabilitiesHandler,
-    GetCapabilitiesQueryHandler,
-    GetCapabilitiesQuery,
-    GetCapabilitiesResult,
-    GetHealthHandler,
-    GetHealthQueryHandler,
-    GetHealthQuery,
-    GetHealthResult,
-)
+from sackmesser.application.bus import CommandBus, Handler, HandlerNotRegisteredError, QueryBus
 from sackmesser.application.errors import (
     ApplicationError,
     ConflictError,
@@ -26,20 +10,35 @@ from sackmesser.application.errors import (
     NotFoundError,
     ValidationError,
 )
+from sackmesser.application.handlers.core import (
+    GetCapabilitiesQueryHandler,
+    GetHealthQueryHandler,
+)
+from sackmesser.application.requests.core import (
+    CapabilityDto,
+    GetCapabilitiesQuery,
+    GetCapabilitiesResult,
+    GetHealthQuery,
+    GetHealthResult,
+)
+
+# Backward-compatible aliases
+GetCapabilitiesHandler = GetCapabilitiesQueryHandler
+GetHealthHandler = GetHealthQueryHandler
 
 __all__ = [
     "ApplicationError",
-    "CommandBus",
     "CapabilityDto",
+    "CommandBus",
     "ConflictError",
     "DisabledModuleError",
     "GetCapabilitiesHandler",
-    "GetCapabilitiesQueryHandler",
     "GetCapabilitiesQuery",
+    "GetCapabilitiesQueryHandler",
     "GetCapabilitiesResult",
     "GetHealthHandler",
-    "GetHealthQueryHandler",
     "GetHealthQuery",
+    "GetHealthQueryHandler",
     "GetHealthResult",
     "Handler",
     "HandlerNotRegisteredError",
@@ -49,29 +48,30 @@ __all__ = [
 ]
 
 _OPTIONAL_EXPORTS: dict[str, tuple[str, ...]] = {
-    "sackmesser.application.workflows": (
+    "sackmesser.application.requests.workflows": (
         "CreateWorkflowCommand",
-        "CreateWorkflowCommandHandler",
-        "CreateWorkflowHandler",
         "CreateWorkflowResult",
-        "ListWorkflowsHandler",
         "ListWorkflowsQuery",
-        "ListWorkflowsQueryHandler",
         "ListWorkflowsResult",
+        "WorkflowDto",
     ),
-    "sackmesser.application.cache": (
+    "sackmesser.application.handlers.workflows": (
+        "CreateWorkflowCommandHandler",
+        "ListWorkflowsQueryHandler",
+    ),
+    "sackmesser.application.requests.cache": (
+        "CacheEntryDto",
         "DeleteCacheEntryCommand",
-        "DeleteCacheEntryCommandHandler",
-        "DeleteCacheEntryHandler",
         "DeleteCacheEntryResult",
-        "GetCacheEntryHandler",
         "GetCacheEntryQuery",
-        "GetCacheEntryQueryHandler",
         "GetCacheEntryResult",
         "SetCacheEntryCommand",
-        "SetCacheEntryCommandHandler",
-        "SetCacheEntryHandler",
         "SetCacheEntryResult",
+    ),
+    "sackmesser.application.handlers.cache": (
+        "DeleteCacheEntryCommandHandler",
+        "GetCacheEntryQueryHandler",
+        "SetCacheEntryCommandHandler",
     ),
 }
 
@@ -83,3 +83,19 @@ for module_name, export_names in _OPTIONAL_EXPORTS.items():
     for export_name in export_names:
         globals()[export_name] = getattr(module, export_name)
     __all__.extend(export_names)
+
+if "CreateWorkflowCommandHandler" in globals():
+    globals()["CreateWorkflowHandler"] = globals()["CreateWorkflowCommandHandler"]
+    __all__.append("CreateWorkflowHandler")
+if "ListWorkflowsQueryHandler" in globals():
+    globals()["ListWorkflowsHandler"] = globals()["ListWorkflowsQueryHandler"]
+    __all__.append("ListWorkflowsHandler")
+if "SetCacheEntryCommandHandler" in globals():
+    globals()["SetCacheEntryHandler"] = globals()["SetCacheEntryCommandHandler"]
+    __all__.append("SetCacheEntryHandler")
+if "GetCacheEntryQueryHandler" in globals():
+    globals()["GetCacheEntryHandler"] = globals()["GetCacheEntryQueryHandler"]
+    __all__.append("GetCacheEntryHandler")
+if "DeleteCacheEntryCommandHandler" in globals():
+    globals()["DeleteCacheEntryHandler"] = globals()["DeleteCacheEntryCommandHandler"]
+    __all__.append("DeleteCacheEntryHandler")

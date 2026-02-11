@@ -1,10 +1,24 @@
-"""Core application DTOs."""
+"""Core request/response models."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class GetHealthQuery(BaseModel):
+    """Request health data for runtime resources."""
+
+    model_config = ConfigDict(frozen=True)
+
+    include_optional_checks: bool = Field(default=True)
+
+
+class GetCapabilitiesQuery(BaseModel):
+    """Request currently available/active capabilities."""
+
+    model_config = ConfigDict(frozen=True)
 
 
 class CapabilityDto(BaseModel):

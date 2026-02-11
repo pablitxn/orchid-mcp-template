@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Query, status
 
-from sackmesser.adapters.dependencies import ContainerDep
 from sackmesser.adapters.api.schemas import CreateWorkflowRequest
+from sackmesser.adapters.dependencies import ContainerDep
 from sackmesser.application.errors import DisabledModuleError
-from sackmesser.application.workflows import CreateWorkflowCommand, ListWorkflowsQuery
+from sackmesser.application.requests.workflows import (
+    CreateWorkflowCommand,
+    ListWorkflowsQuery,
+)
 
 router = APIRouter(prefix="/api/v1/workflows")
 

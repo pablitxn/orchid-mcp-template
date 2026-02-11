@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from importlib import import_module
-from typing import Iterable
 
 from sackmesser.adapters.mcp.tools.common import ToolSpec
 

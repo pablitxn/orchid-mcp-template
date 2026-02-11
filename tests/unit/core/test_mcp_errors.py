@@ -10,7 +10,7 @@ from sackmesser.adapters.mcp.tools.redis import cache_get_tool
 
 
 class _ContainerWithoutRedis:
-    get_cache_entry_handler = None
+    enabled_modules = frozenset({"core"})
 
 
 def test_mcp_tool_error_to_payload() -> None:

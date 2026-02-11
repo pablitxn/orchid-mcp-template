@@ -5,6 +5,15 @@ Template base para OpenAPI plugin + MCP server con arquitectura hexagonal estric
 Incluye verticales funcionales por recurso y un setup script para elegir modulos,
 quitar lo que no se usa y dejar el repo listo para el proyecto final.
 
+## Arquitectura (actual)
+
+- `adapters/`: API + MCP, delgados, solo validan/transfieren y despachan al bus.
+- `application/requests`: contratos `Command/Query` + resultados.
+- `application/handlers`: handlers de aplicación (casos de uso).
+- `application/bus.py`: `CommandBus` y `QueryBus`.
+- `domain/`: entidades + puertos hexagonales.
+- `infrastructure/`: adapters dirigidos por puertos (Postgres/Redis/Runtime).
+
 ## Golden path actual
 
 Implementado y funcional:

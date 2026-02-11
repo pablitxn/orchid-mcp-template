@@ -9,25 +9,13 @@ from orchid_commons import PostgresProvider, RedisCache, ResourceManager
 from orchid_commons.config.models import AppSettings
 
 from sackmesser.application.bus import CommandBus, QueryBus
-from sackmesser.application.cache import (
-    DeleteCacheEntryCommand,
-    DeleteCacheEntryCommandHandler,
-    GetCacheEntryQuery,
-    GetCacheEntryQueryHandler,
-    SetCacheEntryCommand,
-    SetCacheEntryCommandHandler,
-)
-from sackmesser.application.core import (
-    GetCapabilitiesQuery,
+from sackmesser.application.handlers.core import (
     GetCapabilitiesQueryHandler,
-    GetHealthQuery,
     GetHealthQueryHandler,
 )
-from sackmesser.application.workflows import (
-    CreateWorkflowCommand,
-    CreateWorkflowCommandHandler,
-    ListWorkflowsQuery,
-    ListWorkflowsQueryHandler,
+from sackmesser.application.requests.core import (
+    GetCapabilitiesQuery,
+    GetHealthQuery,
 )
 from sackmesser.infrastructure.core.capability_provider import ManifestCapabilityProvider
 from sackmesser.infrastructure.core.health_provider import ResourceManagerHealthProvider
@@ -69,6 +57,14 @@ async def build_container(
     query_bus.register(GetHealthQuery, GetHealthQueryHandler(health_port))
 
     if "postgres" in enabled_modules:
+        from sackmesser.application.handlers.workflows import (
+            CreateWorkflowCommandHandler,
+            ListWorkflowsQueryHandler,
+        )
+        from sackmesser.application.requests.workflows import (
+            CreateWorkflowCommand,
+            ListWorkflowsQuery,
+        )
         from sackmesser.infrastructure.postgres.workflow_repository import (
             PostgresWorkflowRepository,
         )
@@ -87,6 +83,16 @@ async def build_container(
         )
 
     if "redis" in enabled_modules:
+        from sackmesser.application.handlers.cache import (
+            DeleteCacheEntryCommandHandler,
+            GetCacheEntryQueryHandler,
+            SetCacheEntryCommandHandler,
+        )
+        from sackmesser.application.requests.cache import (
+            DeleteCacheEntryCommand,
+            GetCacheEntryQuery,
+            SetCacheEntryCommand,
+        )
         from sackmesser.infrastructure.redis.cache_repository import RedisCacheRepository
 
         redis_cache = cast("RedisCache", manager.get("redis"))

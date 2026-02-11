@@ -1,13 +1,14 @@
-"""Core query handlers (application use cases)."""
+"""Core query handlers."""
 
 from __future__ import annotations
 
-from sackmesser.application.core.dtos import (
+from sackmesser.application.requests.core import (
     CapabilityDto,
+    GetCapabilitiesQuery,
     GetCapabilitiesResult,
+    GetHealthQuery,
     GetHealthResult,
 )
-from sackmesser.application.core.queries import GetCapabilitiesQuery, GetHealthQuery
 from sackmesser.domain.ports.core_ports import CapabilityPort, HealthPort
 
 
@@ -41,8 +42,3 @@ class GetHealthQueryHandler:
     async def handle(self, _: GetHealthQuery) -> GetHealthResult:
         snapshot = await self._health_port.get_health()
         return GetHealthResult(status=snapshot.status, payload=snapshot.payload)
-
-
-# Backward-compatible aliases
-GetCapabilitiesHandler = GetCapabilitiesQueryHandler
-GetHealthHandler = GetHealthQueryHandler

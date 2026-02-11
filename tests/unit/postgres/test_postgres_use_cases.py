@@ -1,16 +1,18 @@
-"""Unit tests for postgres workflow use cases."""
+"""Unit tests for workflow request handlers."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sackmesser.application.postgres import (
-    CreateWorkflowCommand,
-    CreateWorkflowUseCase,
-    ListWorkflowsQuery,
-    ListWorkflowsUseCase,
+from sackmesser.application.handlers.workflows import (
+    CreateWorkflowCommandHandler,
+    ListWorkflowsQueryHandler,
 )
-from sackmesser.domain.postgres import Workflow
+from sackmesser.application.requests.workflows import (
+    CreateWorkflowCommand,
+    ListWorkflowsQuery,
+)
+from sackmesser.domain.workflows import Workflow
 
 
 class _FakeWorkflowRepository:
@@ -31,22 +33,22 @@ class _FakeWorkflowRepository:
         return self._items[offset : offset + limit]
 
 
-async def test_create_workflow_use_case() -> None:
+async def test_create_workflow_command_handler() -> None:
     repository = _FakeWorkflowRepository()
-    use_case = CreateWorkflowUseCase(repository)
+    handler = CreateWorkflowCommandHandler(repository)
 
-    result = await use_case.execute(
+    result = await handler.handle(
         CreateWorkflowCommand(title="demo", payload={"kind": "smoke"})
     )
     assert result.workflow.title == "demo"
     assert result.workflow.payload["kind"] == "smoke"
 
 
-async def test_list_workflows_use_case() -> None:
+async def test_list_workflows_query_handler() -> None:
     repository = _FakeWorkflowRepository()
     await repository.create("one", {})
     await repository.create("two", {})
 
-    use_case = ListWorkflowsUseCase(repository)
-    result = await use_case.execute(ListWorkflowsQuery(limit=10, offset=0))
+    handler = ListWorkflowsQueryHandler(repository)
+    result = await handler.handle(ListWorkflowsQuery(limit=10, offset=0))
     assert len(result.workflows) == 2

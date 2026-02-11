@@ -1,16 +1,14 @@
-"""Cache command/query handlers (application use cases)."""
+"""Cache command/query handlers."""
 
-from sackmesser.application.cache.commands import (
-    DeleteCacheEntryCommand,
-    SetCacheEntryCommand,
-)
-from sackmesser.application.cache.dtos import (
+from sackmesser.application.requests.cache import (
     CacheEntryDto,
+    DeleteCacheEntryCommand,
     DeleteCacheEntryResult,
+    GetCacheEntryQuery,
     GetCacheEntryResult,
+    SetCacheEntryCommand,
     SetCacheEntryResult,
 )
-from sackmesser.application.cache.queries import GetCacheEntryQuery
 from sackmesser.domain.ports.cache_ports import CacheRepositoryPort
 
 
@@ -51,14 +49,3 @@ class DeleteCacheEntryCommandHandler:
     async def handle(self, command: DeleteCacheEntryCommand) -> DeleteCacheEntryResult:
         success = await self._repository.delete(command.key)
         return DeleteCacheEntryResult(success=success, key=command.key)
-
-
-# Backward-compatible aliases
-SetCacheEntryHandler = SetCacheEntryCommandHandler
-GetCacheEntryHandler = GetCacheEntryQueryHandler
-DeleteCacheEntryHandler = DeleteCacheEntryCommandHandler
-
-# Backward-compatible aliases for previous UseCase naming
-SetCacheEntryUseCase = SetCacheEntryCommandHandler
-GetCacheEntryUseCase = GetCacheEntryQueryHandler
-DeleteCacheEntryUseCase = DeleteCacheEntryCommandHandler

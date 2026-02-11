@@ -1,5 +1,0 @@
-"""Backward-compatible exports for cache entities."""
-
-from sackmesser.domain.cache.entities import CacheEntry
-
-__all__ = ["CacheEntry"]

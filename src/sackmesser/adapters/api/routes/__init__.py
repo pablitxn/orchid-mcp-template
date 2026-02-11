@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from importlib import import_module
-from typing import Iterable
 
 from fastapi import APIRouter
 

@@ -1,14 +1,14 @@
-"""Workflow command/query handlers (application use cases)."""
+"""Workflow command/query handlers."""
 
 from __future__ import annotations
 
-from sackmesser.application.workflows.commands import CreateWorkflowCommand
-from sackmesser.application.workflows.dtos import (
+from sackmesser.application.requests.workflows import (
+    CreateWorkflowCommand,
     CreateWorkflowResult,
+    ListWorkflowsQuery,
     ListWorkflowsResult,
     WorkflowDto,
 )
-from sackmesser.application.workflows.queries import ListWorkflowsQuery
 from sackmesser.domain.ports.workflow_ports import WorkflowRepositoryPort
 
 
@@ -49,12 +49,3 @@ class ListWorkflowsQueryHandler:
                 for item in workflows
             ]
         )
-
-
-# Backward-compatible aliases (older API exported *Handler names without CQRS kind)
-CreateWorkflowHandler = CreateWorkflowCommandHandler
-ListWorkflowsHandler = ListWorkflowsQueryHandler
-
-# Backward-compatible aliases for previous UseCase naming
-CreateWorkflowUseCase = CreateWorkflowCommandHandler
-ListWorkflowsUseCase = ListWorkflowsQueryHandler

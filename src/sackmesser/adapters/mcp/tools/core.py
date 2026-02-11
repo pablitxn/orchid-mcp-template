@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sackmesser.application.core import GetCapabilitiesQuery, GetHealthQuery
+from sackmesser.application.requests.core import GetCapabilitiesQuery, GetHealthQuery
 from sackmesser.infrastructure.runtime.container import ApplicationContainer
 
 from .common import ToolSpec
