@@ -1,7 +1,6 @@
 """Cache command/query handlers."""
 
 from sackmesser.application.requests.cache import (
-    CacheEntryDto,
     DeleteCacheEntryCommand,
     DeleteCacheEntryResult,
     GetCacheEntryQuery,
@@ -9,43 +8,69 @@ from sackmesser.application.requests.cache import (
     SetCacheEntryCommand,
     SetCacheEntryResult,
 )
+from sackmesser.application.use_cases.cache import (
+    DeleteCacheEntryUseCase,
+    GetCacheEntryUseCase,
+    SetCacheEntryUseCase,
+)
 from sackmesser.domain.ports.cache_ports import CacheRepositoryPort
 
 
 class SetCacheEntryCommandHandler:
-    """Handle cache set commands."""
+    """Thin adapter for cache set use case."""
 
-    def __init__(self, repository: CacheRepositoryPort) -> None:
-        self._repository = repository
+    def __init__(
+        self,
+        repository: CacheRepositoryPort | None = None,
+        *,
+        use_case: SetCacheEntryUseCase | None = None,
+    ) -> None:
+        if use_case is None:
+            if repository is None:
+                msg = "repository is required when use_case is not provided"
+                raise ValueError(msg)
+            use_case = SetCacheEntryUseCase(repository)
+        self._use_case = use_case
 
     async def handle(self, command: SetCacheEntryCommand) -> SetCacheEntryResult:
-        success = await self._repository.set(command.key, command.value, command.ttl_seconds)
-        return SetCacheEntryResult(success=success, key=command.key)
+        return await self._use_case.execute(command)
 
 
 class GetCacheEntryQueryHandler:
-    """Handle cache get queries."""
+    """Thin adapter for cache get use case."""
 
-    def __init__(self, repository: CacheRepositoryPort) -> None:
-        self._repository = repository
+    def __init__(
+        self,
+        repository: CacheRepositoryPort | None = None,
+        *,
+        use_case: GetCacheEntryUseCase | None = None,
+    ) -> None:
+        if use_case is None:
+            if repository is None:
+                msg = "repository is required when use_case is not provided"
+                raise ValueError(msg)
+            use_case = GetCacheEntryUseCase(repository)
+        self._use_case = use_case
 
     async def handle(self, query: GetCacheEntryQuery) -> GetCacheEntryResult:
-        cache_entry = await self._repository.get(query.key)
-        return GetCacheEntryResult(
-            entry=CacheEntryDto(
-                key=cache_entry.key,
-                value=cache_entry.value,
-                found=cache_entry.value is not None,
-            )
-        )
+        return await self._use_case.execute(query)
 
 
 class DeleteCacheEntryCommandHandler:
-    """Handle cache delete commands."""
+    """Thin adapter for cache delete use case."""
 
-    def __init__(self, repository: CacheRepositoryPort) -> None:
-        self._repository = repository
+    def __init__(
+        self,
+        repository: CacheRepositoryPort | None = None,
+        *,
+        use_case: DeleteCacheEntryUseCase | None = None,
+    ) -> None:
+        if use_case is None:
+            if repository is None:
+                msg = "repository is required when use_case is not provided"
+                raise ValueError(msg)
+            use_case = DeleteCacheEntryUseCase(repository)
+        self._use_case = use_case
 
     async def handle(self, command: DeleteCacheEntryCommand) -> DeleteCacheEntryResult:
-        success = await self._repository.delete(command.key)
-        return DeleteCacheEntryResult(success=success, key=command.key)
+        return await self._use_case.execute(command)

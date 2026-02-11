@@ -21,6 +21,8 @@ from sackmesser.application.requests.core import (
     GetHealthQuery,
     GetHealthResult,
 )
+from sackmesser.application.use_cases.base import BaseUseCase, UseCase
+from sackmesser.application.use_cases.core import GetCapabilitiesUseCase, GetHealthUseCase
 
 # Backward-compatible aliases
 GetCapabilitiesHandler = GetCapabilitiesQueryHandler
@@ -28,6 +30,7 @@ GetHealthHandler = GetHealthQueryHandler
 
 __all__ = [
     "ApplicationError",
+    "BaseUseCase",
     "CapabilityDto",
     "CommandBus",
     "ConflictError",
@@ -36,14 +39,17 @@ __all__ = [
     "GetCapabilitiesQuery",
     "GetCapabilitiesQueryHandler",
     "GetCapabilitiesResult",
+    "GetCapabilitiesUseCase",
     "GetHealthHandler",
     "GetHealthQuery",
     "GetHealthQueryHandler",
     "GetHealthResult",
+    "GetHealthUseCase",
     "Handler",
     "HandlerNotRegisteredError",
     "NotFoundError",
     "QueryBus",
+    "UseCase",
     "ValidationError",
 ]
 
@@ -59,6 +65,10 @@ _OPTIONAL_EXPORTS: dict[str, tuple[str, ...]] = {
         "CreateWorkflowCommandHandler",
         "ListWorkflowsQueryHandler",
     ),
+    "sackmesser.application.use_cases.workflows": (
+        "CreateWorkflowUseCase",
+        "ListWorkflowsUseCase",
+    ),
     "sackmesser.application.requests.cache": (
         "CacheEntryDto",
         "DeleteCacheEntryCommand",
@@ -72,6 +82,11 @@ _OPTIONAL_EXPORTS: dict[str, tuple[str, ...]] = {
         "DeleteCacheEntryCommandHandler",
         "GetCacheEntryQueryHandler",
         "SetCacheEntryCommandHandler",
+    ),
+    "sackmesser.application.use_cases.cache": (
+        "DeleteCacheEntryUseCase",
+        "GetCacheEntryUseCase",
+        "SetCacheEntryUseCase",
     ),
 }
 

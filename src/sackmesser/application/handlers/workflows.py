@@ -7,45 +7,49 @@ from sackmesser.application.requests.workflows import (
     CreateWorkflowResult,
     ListWorkflowsQuery,
     ListWorkflowsResult,
-    WorkflowDto,
+)
+from sackmesser.application.use_cases.workflows import (
+    CreateWorkflowUseCase,
+    ListWorkflowsUseCase,
 )
 from sackmesser.domain.ports.workflow_ports import WorkflowRepositoryPort
 
 
 class CreateWorkflowCommandHandler:
-    """Handle workflow creation commands."""
+    """Thin adapter for workflow creation use case."""
 
-    def __init__(self, repository: WorkflowRepositoryPort) -> None:
-        self._repository = repository
+    def __init__(
+        self,
+        repository: WorkflowRepositoryPort | None = None,
+        *,
+        use_case: CreateWorkflowUseCase | None = None,
+    ) -> None:
+        if use_case is None:
+            if repository is None:
+                msg = "repository is required when use_case is not provided"
+                raise ValueError(msg)
+            use_case = CreateWorkflowUseCase(repository)
+        self._use_case = use_case
 
     async def handle(self, command: CreateWorkflowCommand) -> CreateWorkflowResult:
-        workflow = await self._repository.create(command.title, command.payload)
-        return CreateWorkflowResult(
-            workflow=WorkflowDto(
-                id=workflow.id,
-                title=workflow.title,
-                payload=workflow.payload,
-                created_at=workflow.created_at,
-            )
-        )
+        return await self._use_case.execute(command)
 
 
 class ListWorkflowsQueryHandler:
-    """Handle workflow list queries."""
+    """Thin adapter for workflow listing use case."""
 
-    def __init__(self, repository: WorkflowRepositoryPort) -> None:
-        self._repository = repository
+    def __init__(
+        self,
+        repository: WorkflowRepositoryPort | None = None,
+        *,
+        use_case: ListWorkflowsUseCase | None = None,
+    ) -> None:
+        if use_case is None:
+            if repository is None:
+                msg = "repository is required when use_case is not provided"
+                raise ValueError(msg)
+            use_case = ListWorkflowsUseCase(repository)
+        self._use_case = use_case
 
     async def handle(self, query: ListWorkflowsQuery) -> ListWorkflowsResult:
-        workflows = await self._repository.list(limit=query.limit, offset=query.offset)
-        return ListWorkflowsResult(
-            workflows=[
-                WorkflowDto(
-                    id=item.id,
-                    title=item.title,
-                    payload=item.payload,
-                    created_at=item.created_at,
-                )
-                for item in workflows
-            ]
-        )
+        return await self._use_case.execute(query)
