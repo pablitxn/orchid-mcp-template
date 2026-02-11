@@ -1,4 +1,4 @@
-"""Backward-compatible exports for workflow entities."""
+"""Workflow domain models."""
 
 from sackmesser.domain.workflows.entities import Workflow
 

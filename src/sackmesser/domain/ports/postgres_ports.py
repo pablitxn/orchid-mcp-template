@@ -1,17 +1,5 @@
-"""Postgres-related hexagonal ports."""
+"""Backward-compatible exports for workflow ports."""
 
-from __future__ import annotations
+from sackmesser.domain.ports.workflow_ports import WorkflowRepositoryPort
 
-from typing import Protocol
-
-from sackmesser.domain.postgres.entities import Workflow
-
-
-class WorkflowRepositoryPort(Protocol):
-    """Persistence contract for workflow aggregate."""
-
-    async def create(self, title: str, payload: dict[str, object]) -> Workflow:
-        """Persist a workflow and return stored entity."""
-
-    async def list(self, *, limit: int, offset: int) -> list[Workflow]:
-        """List workflows in reverse creation order."""
+__all__ = ["WorkflowRepositoryPort"]

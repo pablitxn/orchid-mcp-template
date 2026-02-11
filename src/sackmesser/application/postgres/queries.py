@@ -1,12 +1,5 @@
-"""Postgres application queries."""
+"""Backward-compatible workflow query exports."""
 
-from pydantic import BaseModel, ConfigDict, Field
+from sackmesser.application.workflows.queries import ListWorkflowsQuery
 
-
-class ListWorkflowsQuery(BaseModel):
-    """List workflows from Postgres."""
-
-    model_config = ConfigDict(frozen=True)
-
-    limit: int = Field(default=20, ge=1, le=100)
-    offset: int = Field(default=0, ge=0)
+__all__ = ["ListWorkflowsQuery"]

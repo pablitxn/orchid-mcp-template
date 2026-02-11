@@ -1,0 +1,11 @@
+"""Cache query models."""
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class GetCacheEntryQuery(BaseModel):
+    """Fetch cache value by key."""
+
+    model_config = ConfigDict(frozen=True)
+
+    key: str = Field(min_length=1, max_length=200)

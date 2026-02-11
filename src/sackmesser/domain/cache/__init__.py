@@ -1,4 +1,4 @@
-"""Backward-compatible exports for cache entities."""
+"""Cache domain models."""
 
 from sackmesser.domain.cache.entities import CacheEntry
 

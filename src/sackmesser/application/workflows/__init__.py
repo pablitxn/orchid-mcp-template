@@ -1,18 +1,20 @@
-"""Backward-compatible postgres module exports (workflow capability)."""
+"""Workflow application exports."""
 
-from sackmesser.application.workflows import (
-    CreateWorkflowCommand,
-    CreateWorkflowCommandHandler,
-    CreateWorkflowHandler,
+from sackmesser.application.workflows.commands import CreateWorkflowCommand
+from sackmesser.application.workflows.dtos import (
     CreateWorkflowResult,
-    CreateWorkflowUseCase,
-    ListWorkflowsHandler,
-    ListWorkflowsQuery,
-    ListWorkflowsQueryHandler,
     ListWorkflowsResult,
-    ListWorkflowsUseCase,
     WorkflowDto,
 )
+from sackmesser.application.workflows.handlers import (
+    CreateWorkflowCommandHandler,
+    CreateWorkflowHandler,
+    CreateWorkflowUseCase,
+    ListWorkflowsHandler,
+    ListWorkflowsQueryHandler,
+    ListWorkflowsUseCase,
+)
+from sackmesser.application.workflows.queries import ListWorkflowsQuery
 
 __all__ = [
     "CreateWorkflowCommand",

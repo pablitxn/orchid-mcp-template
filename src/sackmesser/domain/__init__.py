@@ -10,8 +10,8 @@ __all__ = [
 ]
 
 _OPTIONAL_EXPORTS: dict[str, tuple[str, ...]] = {
-    "sackmesser.domain.postgres": ("Workflow",),
-    "sackmesser.domain.redis": ("CacheEntry",),
+    "sackmesser.domain.workflows": ("Workflow",),
+    "sackmesser.domain.cache": ("CacheEntry",),
 }
 
 for module_name, export_names in _OPTIONAL_EXPORTS.items():
