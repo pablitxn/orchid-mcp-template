@@ -111,13 +111,13 @@ jobs:
         run: |
           docker build \
             -f Dockerfile \
-            -t orchid-skills-template:scan .
+            -t orchid-mcp-template:scan .
 
       - name: Scan container image
         uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: image
-          image-ref: orchid-skills-template:scan
+          image-ref: orchid-mcp-template:scan
           scanners: vuln,secret
           severity: CRITICAL,HIGH,MEDIUM
           format: sarif

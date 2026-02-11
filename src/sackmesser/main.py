@@ -13,7 +13,7 @@ from sackmesser.infrastructure.runtime.state import resolve_environment
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Orchid skills template service")
+    parser = argparse.ArgumentParser(description="Orchid MCP template service")
     parser.add_argument(
         "--mcp",
         action="store_true",

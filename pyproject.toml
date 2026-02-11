@@ -3,7 +3,7 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [project]
-name = "orchid-skills-template"
+name = "orchid-mcp-template"
 version = "0.1.0"
 description = "Strict-hexagonal template for OpenAPI plugin and MCP server resources"
 readme = "README.md"

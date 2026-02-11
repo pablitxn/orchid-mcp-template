@@ -36,7 +36,7 @@ PYTHONPATH=src uv run --extra dev pytest -q --cov=src/sackmesser --cov-report=te
 Resultado actual:
 
 - `96 passed`
-- **Coverage total: 95.77%**
+- **Coverage total: 95.81%**
 
 Conteo total recolectado (`tests` completo):
 
@@ -247,6 +247,6 @@ Estado actual frente a DoD:
 
 1. CI verde con coverage gate activo: **SI**
 2. Arbol de tests ordenado por capas: **SI**
-3. Coverage global >= meta acordada: **SI** (95.77%)
+3. Coverage global >= meta acordada: **SI** (95.81%)
 4. Hotspots P0/P1 principales sin 0%: **SI**
 5. Integracion separada en pipeline: **SI**

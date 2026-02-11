@@ -36,7 +36,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.service.name,
         version=settings.service.version,
-        description="Orchid skills template with strict hexagonal modules",
+        description="Orchid MCP template with strict hexagonal modules",
         lifespan=lifespan,
     )
     register_exception_handlers(app)

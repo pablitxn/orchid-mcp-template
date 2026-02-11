@@ -1,4 +1,4 @@
-# orchid-skills-template
+# orchid-mcp-template
 
 Template base para OpenAPI plugin + MCP server con arquitectura hexagonal estricta.
 

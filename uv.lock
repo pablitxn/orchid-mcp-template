@@ -1428,7 +1428,7 @@ observability = [
 ]
 
 [[package]]
-name = "orchid-skills-template"
+name = "orchid-mcp-template"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

@@ -1,4 +1,4 @@
-# Orchid Skills Template Capability Matrix
+# Orchid MCP Template Capability Matrix
 
 ## Objetivo
 
