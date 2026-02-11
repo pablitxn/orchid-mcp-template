@@ -1,12 +1,24 @@
 """Domain layer for strict hexagonal template."""
 
+from importlib import import_module
+
 from sackmesser.domain.core import Capability, HealthSnapshot
-from sackmesser.domain.postgres import Workflow
-from sackmesser.domain.redis import CacheEntry
 
 __all__ = [
-    "CacheEntry",
     "Capability",
     "HealthSnapshot",
-    "Workflow",
 ]
+
+_OPTIONAL_EXPORTS: dict[str, tuple[str, ...]] = {
+    "sackmesser.domain.postgres": ("Workflow",),
+    "sackmesser.domain.redis": ("CacheEntry",),
+}
+
+for module_name, export_names in _OPTIONAL_EXPORTS.items():
+    try:
+        module = import_module(module_name)
+    except ModuleNotFoundError:
+        continue
+    for export_name in export_names:
+        globals()[export_name] = getattr(module, export_name)
+    __all__.extend(export_names)

@@ -20,6 +20,16 @@ from sackmesser.infrastructure.runtime import (
 )
 
 
+def _unknown_tool_payload(name: str) -> dict[str, Any]:
+    return {
+        "error": {
+            "code": "unknown_tool",
+            "message": f"Unknown tool: {name}",
+            "details": {"tool": name},
+        }
+    }
+
+
 def create_mcp_server() -> Server:
     """Create MCP server using runtime enabled modules."""
     state = get_runtime_state()
@@ -47,7 +57,7 @@ def create_mcp_server() -> Server:
         container = get_runtime_container()
         tool = tool_map.get(name)
         if tool is None:
-            payload = {"error": f"Unknown tool: {name}"}
+            payload = _unknown_tool_payload(name)
             return [TextContent(type="text", text=json.dumps(payload))]
 
         try:

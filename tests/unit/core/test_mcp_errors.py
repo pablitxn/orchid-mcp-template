@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from sackmesser.adapters.mcp.errors import MCPToolError
+from sackmesser.adapters.mcp.server import _unknown_tool_payload
 from sackmesser.adapters.mcp.tools.redis import cache_get_tool
 
 
@@ -21,6 +22,13 @@ def test_mcp_tool_error_to_payload() -> None:
     payload = exc.to_payload()
     assert payload["error"]["code"] == "module_disabled"
     assert payload["error"]["details"]["module"] == "redis"
+
+
+def test_unknown_tool_payload_shape() -> None:
+    payload = _unknown_tool_payload("demo_tool")
+    assert payload["error"]["code"] == "unknown_tool"
+    assert payload["error"]["message"] == "Unknown tool: demo_tool"
+    assert payload["error"]["details"]["tool"] == "demo_tool"
 
 
 @pytest.mark.asyncio

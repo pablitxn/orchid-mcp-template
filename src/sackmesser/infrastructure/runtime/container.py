@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from orchid_commons import PostgresProvider, RedisCache, ResourceManager
 from orchid_commons.config.models import AppSettings
@@ -14,25 +14,20 @@ from sackmesser.application.core import (
     GetHealthHandler,
     GetHealthUseCase,
 )
-from sackmesser.application.postgres import (
-    CreateWorkflowHandler,
-    CreateWorkflowUseCase,
-    ListWorkflowsHandler,
-    ListWorkflowsUseCase,
-)
-from sackmesser.application.redis import (
-    DeleteCacheEntryHandler,
-    DeleteCacheEntryUseCase,
-    GetCacheEntryHandler,
-    GetCacheEntryUseCase,
-    SetCacheEntryHandler,
-    SetCacheEntryUseCase,
-)
 from sackmesser.infrastructure.core.capability_provider import ManifestCapabilityProvider
 from sackmesser.infrastructure.core.health_provider import ResourceManagerHealthProvider
-from sackmesser.infrastructure.postgres.workflow_repository import PostgresWorkflowRepository
-from sackmesser.infrastructure.redis.cache_repository import RedisCacheRepository
 from sackmesser.infrastructure.runtime.modules import ModuleMetadata
+
+if TYPE_CHECKING:
+    from sackmesser.application.postgres import (
+        CreateWorkflowHandler,
+        ListWorkflowsHandler,
+    )
+    from sackmesser.application.redis import (
+        DeleteCacheEntryHandler,
+        GetCacheEntryHandler,
+        SetCacheEntryHandler,
+    )
 
 
 @dataclass(slots=True)
@@ -79,6 +74,16 @@ async def build_container(
     )
 
     if "postgres" in enabled_modules:
+        from sackmesser.application.postgres import (
+            CreateWorkflowHandler,
+            CreateWorkflowUseCase,
+            ListWorkflowsHandler,
+            ListWorkflowsUseCase,
+        )
+        from sackmesser.infrastructure.postgres.workflow_repository import (
+            PostgresWorkflowRepository,
+        )
+
         provider = cast("PostgresProvider", manager.get("postgres"))
         workflow_repository = PostgresWorkflowRepository(provider)
         await workflow_repository.ensure_schema()
@@ -91,6 +96,16 @@ async def build_container(
         )
 
     if "redis" in enabled_modules:
+        from sackmesser.application.redis import (
+            DeleteCacheEntryHandler,
+            DeleteCacheEntryUseCase,
+            GetCacheEntryHandler,
+            GetCacheEntryUseCase,
+            SetCacheEntryHandler,
+            SetCacheEntryUseCase,
+        )
+        from sackmesser.infrastructure.redis.cache_repository import RedisCacheRepository
+
         redis_cache = cast("RedisCache", manager.get("redis"))
         cache_repository = RedisCacheRepository(redis_cache)
 
