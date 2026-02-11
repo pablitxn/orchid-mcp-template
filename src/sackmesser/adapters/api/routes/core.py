@@ -15,12 +15,12 @@ router = APIRouter()
 @router.get("/health")
 async def health(container: ContainerDep) -> dict[str, Any]:
     """Aggregated runtime health from commons ResourceManager."""
-    result = await container.get_health_handler.handle(GetHealthQuery())
+    result = await container.query_bus.dispatch(GetHealthQuery())
     return result.payload
 
 
 @router.get("/api/v1/capabilities")
 async def capabilities(container: ContainerDep) -> dict[str, Any]:
     """List available and enabled template capabilities."""
-    result = await container.get_capabilities_handler.handle(GetCapabilitiesQuery())
+    result = await container.query_bus.dispatch(GetCapabilitiesQuery())
     return result.model_dump()

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Path
 from sackmesser.adapters.dependencies import ContainerDep
 from sackmesser.adapters.api.schemas import SetCacheRequest
 from sackmesser.application.errors import DisabledModuleError, NotFoundError
-from sackmesser.application.redis import (
+from sackmesser.application.cache import (
     DeleteCacheEntryCommand,
     GetCacheEntryQuery,
     SetCacheEntryCommand,
@@ -21,11 +21,10 @@ async def set_cache(
     key: str = Path(min_length=1, max_length=200),
 ) -> dict[str, object]:
     """Set cache entry in Redis."""
-    handler = container.set_cache_entry_handler
-    if handler is None:
+    if "redis" not in container.enabled_modules:
         raise DisabledModuleError("redis")
 
-    result = await handler.handle(
+    result = await container.command_bus.dispatch(
         SetCacheEntryCommand(key=key, value=body.value, ttl_seconds=body.ttl_seconds)
     )
     return result.model_dump()
@@ -37,11 +36,10 @@ async def get_cache(
     key: str = Path(min_length=1, max_length=200),
 ) -> dict[str, object]:
     """Get cache entry from Redis."""
-    handler = container.get_cache_entry_handler
-    if handler is None:
+    if "redis" not in container.enabled_modules:
         raise DisabledModuleError("redis")
 
-    result = await handler.handle(GetCacheEntryQuery(key=key))
+    result = await container.query_bus.dispatch(GetCacheEntryQuery(key=key))
     payload = result.model_dump()
     if not result.entry.found:
         raise NotFoundError(
@@ -58,9 +56,8 @@ async def delete_cache(
     key: str = Path(min_length=1, max_length=200),
 ) -> dict[str, object]:
     """Delete cache entry from Redis."""
-    handler = container.delete_cache_entry_handler
-    if handler is None:
+    if "redis" not in container.enabled_modules:
         raise DisabledModuleError("redis")
 
-    result = await handler.handle(DeleteCacheEntryCommand(key=key))
+    result = await container.command_bus.dispatch(DeleteCacheEntryCommand(key=key))
     return result.model_dump()

@@ -1,21 +1,8 @@
-"""Redis application commands."""
+"""Backward-compatible cache command exports."""
 
-from pydantic import BaseModel, ConfigDict, Field
+from sackmesser.application.cache.commands import (
+    DeleteCacheEntryCommand,
+    SetCacheEntryCommand,
+)
 
-
-class SetCacheEntryCommand(BaseModel):
-    """Write cache value in Redis."""
-
-    model_config = ConfigDict(frozen=True)
-
-    key: str = Field(min_length=1, max_length=200)
-    value: str = Field(min_length=1)
-    ttl_seconds: int | None = Field(default=None, ge=1)
-
-
-class DeleteCacheEntryCommand(BaseModel):
-    """Delete cache value in Redis."""
-
-    model_config = ConfigDict(frozen=True)
-
-    key: str = Field(min_length=1, max_length=200)
+__all__ = ["DeleteCacheEntryCommand", "SetCacheEntryCommand"]

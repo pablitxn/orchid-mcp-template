@@ -1,38 +1,38 @@
-"""Redis application exports."""
+"""Backward-compatible redis module exports (cache capability)."""
 
-from sackmesser.application.redis.commands import (
-    DeleteCacheEntryCommand,
-    SetCacheEntryCommand,
-)
-from sackmesser.application.redis.dtos import (
+from sackmesser.application.cache import (
     CacheEntryDto,
-    DeleteCacheEntryResult,
-    GetCacheEntryResult,
-    SetCacheEntryResult,
-)
-from sackmesser.application.redis.handlers import (
+    DeleteCacheEntryCommand,
+    DeleteCacheEntryCommandHandler,
     DeleteCacheEntryHandler,
-    GetCacheEntryHandler,
-    SetCacheEntryHandler,
-)
-from sackmesser.application.redis.queries import GetCacheEntryQuery
-from sackmesser.application.redis.use_cases import (
+    DeleteCacheEntryResult,
     DeleteCacheEntryUseCase,
+    GetCacheEntryHandler,
+    GetCacheEntryQuery,
+    GetCacheEntryQueryHandler,
+    GetCacheEntryResult,
     GetCacheEntryUseCase,
+    SetCacheEntryCommand,
+    SetCacheEntryCommandHandler,
+    SetCacheEntryHandler,
+    SetCacheEntryResult,
     SetCacheEntryUseCase,
 )
 
 __all__ = [
     "CacheEntryDto",
     "DeleteCacheEntryCommand",
+    "DeleteCacheEntryCommandHandler",
     "DeleteCacheEntryHandler",
     "DeleteCacheEntryResult",
     "DeleteCacheEntryUseCase",
     "GetCacheEntryHandler",
     "GetCacheEntryQuery",
+    "GetCacheEntryQueryHandler",
     "GetCacheEntryResult",
     "GetCacheEntryUseCase",
     "SetCacheEntryCommand",
+    "SetCacheEntryCommandHandler",
     "SetCacheEntryHandler",
     "SetCacheEntryResult",
     "SetCacheEntryUseCase",

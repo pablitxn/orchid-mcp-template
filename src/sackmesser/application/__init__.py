@@ -2,12 +2,20 @@
 
 from importlib import import_module
 
+from sackmesser.application.bus import (
+    CommandBus,
+    Handler,
+    HandlerNotRegisteredError,
+    QueryBus,
+)
 from sackmesser.application.core import (
     CapabilityDto,
     GetCapabilitiesHandler,
+    GetCapabilitiesQueryHandler,
     GetCapabilitiesQuery,
     GetCapabilitiesResult,
     GetHealthHandler,
+    GetHealthQueryHandler,
     GetHealthQuery,
     GetHealthResult,
 )
@@ -21,36 +29,47 @@ from sackmesser.application.errors import (
 
 __all__ = [
     "ApplicationError",
+    "CommandBus",
     "CapabilityDto",
     "ConflictError",
     "DisabledModuleError",
     "GetCapabilitiesHandler",
+    "GetCapabilitiesQueryHandler",
     "GetCapabilitiesQuery",
     "GetCapabilitiesResult",
     "GetHealthHandler",
+    "GetHealthQueryHandler",
     "GetHealthQuery",
     "GetHealthResult",
+    "Handler",
+    "HandlerNotRegisteredError",
     "NotFoundError",
+    "QueryBus",
     "ValidationError",
 ]
 
 _OPTIONAL_EXPORTS: dict[str, tuple[str, ...]] = {
-    "sackmesser.application.postgres": (
+    "sackmesser.application.workflows": (
         "CreateWorkflowCommand",
+        "CreateWorkflowCommandHandler",
         "CreateWorkflowHandler",
         "CreateWorkflowResult",
         "ListWorkflowsHandler",
         "ListWorkflowsQuery",
+        "ListWorkflowsQueryHandler",
         "ListWorkflowsResult",
     ),
-    "sackmesser.application.redis": (
+    "sackmesser.application.cache": (
         "DeleteCacheEntryCommand",
+        "DeleteCacheEntryCommandHandler",
         "DeleteCacheEntryHandler",
         "DeleteCacheEntryResult",
         "GetCacheEntryHandler",
         "GetCacheEntryQuery",
+        "GetCacheEntryQueryHandler",
         "GetCacheEntryResult",
         "SetCacheEntryCommand",
+        "SetCacheEntryCommandHandler",
         "SetCacheEntryHandler",
         "SetCacheEntryResult",
     ),

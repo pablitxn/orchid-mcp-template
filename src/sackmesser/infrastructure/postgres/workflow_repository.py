@@ -9,8 +9,8 @@ from typing import Any
 
 from orchid_commons import PostgresProvider
 
-from sackmesser.domain.postgres.entities import Workflow
-from sackmesser.domain.ports.postgres_ports import WorkflowRepositoryPort
+from sackmesser.domain.ports.workflow_ports import WorkflowRepositoryPort
+from sackmesser.domain.workflows.entities import Workflow
 
 _SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS template_workflows (

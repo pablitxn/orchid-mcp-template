@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from orchid_commons import RedisCache
 
-from sackmesser.domain.ports.redis_ports import CacheRepositoryPort
-from sackmesser.domain.redis.entities import CacheEntry
+from sackmesser.domain.cache.entities import CacheEntry
+from sackmesser.domain.ports.cache_ports import CacheRepositoryPort
 
 
 class RedisCacheRepository(CacheRepositoryPort):

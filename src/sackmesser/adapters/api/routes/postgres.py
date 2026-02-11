@@ -7,7 +7,7 @@ from fastapi import APIRouter, Query, status
 from sackmesser.adapters.dependencies import ContainerDep
 from sackmesser.adapters.api.schemas import CreateWorkflowRequest
 from sackmesser.application.errors import DisabledModuleError
-from sackmesser.application.postgres import CreateWorkflowCommand, ListWorkflowsQuery
+from sackmesser.application.workflows import CreateWorkflowCommand, ListWorkflowsQuery
 
 router = APIRouter(prefix="/api/v1/workflows")
 
@@ -18,11 +18,10 @@ async def create_workflow(
     container: ContainerDep,
 ) -> dict[str, object]:
     """Create a workflow in Postgres."""
-    handler = container.create_workflow_handler
-    if handler is None:
+    if "postgres" not in container.enabled_modules:
         raise DisabledModuleError("postgres")
 
-    result = await handler.handle(
+    result = await container.command_bus.dispatch(
         CreateWorkflowCommand(title=body.title, payload=body.payload)
     )
     return result.model_dump()
@@ -35,9 +34,10 @@ async def list_workflows(
     offset: int = Query(default=0, ge=0),
 ) -> dict[str, object]:
     """List workflows from Postgres."""
-    handler = container.list_workflows_handler
-    if handler is None:
+    if "postgres" not in container.enabled_modules:
         raise DisabledModuleError("postgres")
 
-    result = await handler.handle(ListWorkflowsQuery(limit=limit, offset=offset))
+    result = await container.query_bus.dispatch(
+        ListWorkflowsQuery(limit=limit, offset=offset)
+    )
     return result.model_dump()

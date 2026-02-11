@@ -1,33 +1,37 @@
-"""Application container wiring use cases to infrastructure adapters."""
+"""Application container wiring handlers to infrastructure adapters."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from orchid_commons import PostgresProvider, RedisCache, ResourceManager
 from orchid_commons.config.models import AppSettings
 
+from sackmesser.application.bus import CommandBus, QueryBus
+from sackmesser.application.cache import (
+    DeleteCacheEntryCommand,
+    DeleteCacheEntryCommandHandler,
+    GetCacheEntryQuery,
+    GetCacheEntryQueryHandler,
+    SetCacheEntryCommand,
+    SetCacheEntryCommandHandler,
+)
 from sackmesser.application.core import (
-    GetCapabilitiesHandler,
-    GetCapabilitiesUseCase,
-    GetHealthHandler,
-    GetHealthUseCase,
+    GetCapabilitiesQuery,
+    GetCapabilitiesQueryHandler,
+    GetHealthQuery,
+    GetHealthQueryHandler,
+)
+from sackmesser.application.workflows import (
+    CreateWorkflowCommand,
+    CreateWorkflowCommandHandler,
+    ListWorkflowsQuery,
+    ListWorkflowsQueryHandler,
 )
 from sackmesser.infrastructure.core.capability_provider import ManifestCapabilityProvider
 from sackmesser.infrastructure.core.health_provider import ResourceManagerHealthProvider
 from sackmesser.infrastructure.runtime.modules import ModuleMetadata
-
-if TYPE_CHECKING:
-    from sackmesser.application.postgres import (
-        CreateWorkflowHandler,
-        ListWorkflowsHandler,
-    )
-    from sackmesser.application.redis import (
-        DeleteCacheEntryHandler,
-        GetCacheEntryHandler,
-        SetCacheEntryHandler,
-    )
 
 
 @dataclass(slots=True)
@@ -37,16 +41,8 @@ class ApplicationContainer:
     settings: AppSettings
     enabled_modules: frozenset[str]
     resource_manager: ResourceManager
-
-    get_health_handler: GetHealthHandler
-    get_capabilities_handler: GetCapabilitiesHandler
-
-    create_workflow_handler: CreateWorkflowHandler | None = None
-    list_workflows_handler: ListWorkflowsHandler | None = None
-
-    set_cache_entry_handler: SetCacheEntryHandler | None = None
-    get_cache_entry_handler: GetCacheEntryHandler | None = None
-    delete_cache_entry_handler: DeleteCacheEntryHandler | None = None
+    command_bus: CommandBus
+    query_bus: QueryBus
 
 
 async def build_container(
@@ -63,23 +59,16 @@ async def build_container(
     )
     health_port = ResourceManagerHealthProvider(manager)
 
-    container = ApplicationContainer(
-        settings=settings,
-        enabled_modules=enabled_modules,
-        resource_manager=manager,
-        get_capabilities_handler=GetCapabilitiesHandler(
-            GetCapabilitiesUseCase(capability_port)
-        ),
-        get_health_handler=GetHealthHandler(GetHealthUseCase(health_port)),
+    command_bus = CommandBus()
+    query_bus = QueryBus()
+
+    query_bus.register(
+        GetCapabilitiesQuery,
+        GetCapabilitiesQueryHandler(capability_port),
     )
+    query_bus.register(GetHealthQuery, GetHealthQueryHandler(health_port))
 
     if "postgres" in enabled_modules:
-        from sackmesser.application.postgres import (
-            CreateWorkflowHandler,
-            CreateWorkflowUseCase,
-            ListWorkflowsHandler,
-            ListWorkflowsUseCase,
-        )
         from sackmesser.infrastructure.postgres.workflow_repository import (
             PostgresWorkflowRepository,
         )
@@ -88,35 +77,38 @@ async def build_container(
         workflow_repository = PostgresWorkflowRepository(provider)
         await workflow_repository.ensure_schema()
 
-        container.create_workflow_handler = CreateWorkflowHandler(
-            CreateWorkflowUseCase(workflow_repository)
+        command_bus.register(
+            CreateWorkflowCommand,
+            CreateWorkflowCommandHandler(workflow_repository),
         )
-        container.list_workflows_handler = ListWorkflowsHandler(
-            ListWorkflowsUseCase(workflow_repository)
+        query_bus.register(
+            ListWorkflowsQuery,
+            ListWorkflowsQueryHandler(workflow_repository),
         )
 
     if "redis" in enabled_modules:
-        from sackmesser.application.redis import (
-            DeleteCacheEntryHandler,
-            DeleteCacheEntryUseCase,
-            GetCacheEntryHandler,
-            GetCacheEntryUseCase,
-            SetCacheEntryHandler,
-            SetCacheEntryUseCase,
-        )
         from sackmesser.infrastructure.redis.cache_repository import RedisCacheRepository
 
         redis_cache = cast("RedisCache", manager.get("redis"))
         cache_repository = RedisCacheRepository(redis_cache)
 
-        container.set_cache_entry_handler = SetCacheEntryHandler(
-            SetCacheEntryUseCase(cache_repository)
+        command_bus.register(
+            SetCacheEntryCommand,
+            SetCacheEntryCommandHandler(cache_repository),
         )
-        container.get_cache_entry_handler = GetCacheEntryHandler(
-            GetCacheEntryUseCase(cache_repository)
+        query_bus.register(
+            GetCacheEntryQuery,
+            GetCacheEntryQueryHandler(cache_repository),
         )
-        container.delete_cache_entry_handler = DeleteCacheEntryHandler(
-            DeleteCacheEntryUseCase(cache_repository)
+        command_bus.register(
+            DeleteCacheEntryCommand,
+            DeleteCacheEntryCommandHandler(cache_repository),
         )
 
-    return container
+    return ApplicationContainer(
+        settings=settings,
+        enabled_modules=enabled_modules,
+        resource_manager=manager,
+        command_bus=command_bus,
+        query_bus=query_bus,
+    )

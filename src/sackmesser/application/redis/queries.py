@@ -1,11 +1,5 @@
-"""Redis application queries."""
+"""Backward-compatible cache query exports."""
 
-from pydantic import BaseModel, ConfigDict, Field
+from sackmesser.application.cache.queries import GetCacheEntryQuery
 
-
-class GetCacheEntryQuery(BaseModel):
-    """Fetch cache value from Redis."""
-
-    model_config = ConfigDict(frozen=True)
-
-    key: str = Field(min_length=1, max_length=200)
+__all__ = ["GetCacheEntryQuery"]

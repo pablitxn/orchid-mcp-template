@@ -16,12 +16,13 @@ Implementado y funcional:
 - `redis`
 
 Validado hoy:
-- `PYTHONPATH=src pytest -q tests/unit tests/e2e` -> `25 passed`.
+- `PYTHONPATH=src pytest -q tests/unit tests/e2e` -> `33 passed`.
 - `python3 scripts/setup_template.py --modules core --prune --dry-run` corre sin errores.
 - `python3 scripts/setup_template.py --modules core --prune` en copia temporal poda archivos y API/MCP arrancan correctamente.
+- Escenarios de setup validados (`--dry-run` + run real en copia temporal): `core`, `core+postgres`, `core+redis`, `full`.
 
 Riesgo principal actual:
-- Completar sync de setup (`appsettings` + `docker-compose`) para modulos aun no implementados.
+- Implementar modulos faltantes (`blob`, `mongodb`, `qdrant`, `rabbitmq`, `observability`) sobre el wiring ya preparado.
 
 ## Hito 0 (completado): Prune-safe + contrato de error
 
@@ -40,7 +41,7 @@ Trabajo:
 Criterio de aceptacion:
 - `setup --modules core --prune` + smoke test API/MCP pasan en repo podado.
 
-## Hito 1: Setup completo multi-modulo
+## Hito 1 (completado): Setup completo multi-modulo
 
 Objetivo:
 - `setup_template.py` sincroniza config y compose para todos los modulos declarados en `template/module-manifest.json`.

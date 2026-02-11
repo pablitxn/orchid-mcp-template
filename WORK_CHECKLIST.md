@@ -5,7 +5,7 @@
 - [x] `core`, `postgres`, `redis` implementados.
 - [x] Carga dinamica de routers API por modulo (`importlib`).
 - [x] Carga dinamica de tools MCP por modulo (`importlib`).
-- [x] Tests unit + e2e actuales en verde (`25 passed`).
+- [x] Tests unit + e2e actuales en verde (`33 passed`).
 - [x] Test e2e para modulo deshabilitado en API (`tests/e2e/test_api_core.py`).
 - [x] Test unit de errores MCP para `module_disabled` (`tests/unit/core/test_mcp_errors.py`).
 - [x] `setup --modules core --prune` funcional end-to-end en copia temporal.
@@ -23,11 +23,11 @@
 
 ## Sprint 1: Setup completo multi-modulo
 
-- [ ] Extender sync de `config/appsettings.json` para `blob`, `mongodb`, `qdrant`, `rabbitmq`, `observability`.
-- [ ] Extender generacion de `docker-compose.yml` para modulos futuros (o placeholders explicitos).
-- [ ] Revisar y normalizar `prune_paths` en `template/module-manifest.json`.
-- [ ] Definir estrategia para dependencias opcionales (extras faltantes) con mensajes de error claros.
-- [ ] Verificar `--dry-run` y run real en `core`, `core+postgres`, `core+redis`, `full`.
+- [x] Extender sync de `config/appsettings.json` para `blob`, `mongodb`, `qdrant`, `rabbitmq`, `observability`.
+- [x] Extender generacion de `docker-compose.yml` para modulos futuros (mongodb/qdrant/rabbitmq/minio).
+- [x] Revisar y normalizar `prune_paths` en `template/module-manifest.json` desde validacion del setup script.
+- [x] Definir estrategia para dependencias opcionales (extras faltantes) con mensajes de error claros (`Dependency checks` + `--strict-deps`).
+- [x] Verificar `--dry-run` y run real en `core`, `core+postgres`, `core+redis`, `full` (en copias temporales).
 
 ## Sprint 2: Implementaciones faltantes
 
@@ -82,6 +82,9 @@ python3 scripts/setup_template.py --modules core --prune --dry-run
 
 # setup real + prune (usar copia temporal para no tocar el repo principal)
 python3 scripts/setup_template.py --modules core --prune
+
+# fail-fast si faltan extras opcionales para modulos seleccionados
+python3 scripts/setup_template.py --modules core,redis --strict-deps
 
 # infra local para integration
 docker compose up -d
