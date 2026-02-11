@@ -39,3 +39,17 @@ def test_capabilities_endpoint(core_only_enabled_modules: None) -> None:
     payload = response.json()
     assert "capabilities" in payload
     assert any(item["name"] == "core" for item in payload["capabilities"])
+
+
+def test_disabled_module_route_returns_consistent_http_error(
+    core_only_enabled_modules: None,
+) -> None:
+    del core_only_enabled_modules
+    app = create_app()
+    with TestClient(app) as client:
+        response = client.get("/api/v1/workflows")
+
+    assert response.status_code == 404
+    payload = response.json()
+    assert payload["code"] == "http_error"
+    assert payload["message"] == "Not Found"

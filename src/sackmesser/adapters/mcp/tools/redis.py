@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from sackmesser.adapters.mcp.errors import MCPToolError
 from sackmesser.application.redis import (
     DeleteCacheEntryCommand,
     GetCacheEntryQuery,
@@ -21,7 +22,11 @@ async def cache_set_tool(
     """Set cache entry in Redis."""
     handler = container.set_cache_entry_handler
     if handler is None:
-        return {"error": "Redis module is disabled"}
+        raise MCPToolError(
+            code="module_disabled",
+            message="Module 'redis' is disabled",
+            details={"module": "redis"},
+        )
 
     command = SetCacheEntryCommand(
         key=arguments["key"],
@@ -38,10 +43,21 @@ async def cache_get_tool(
     """Get cache entry in Redis."""
     handler = container.get_cache_entry_handler
     if handler is None:
-        return {"error": "Redis module is disabled"}
+        raise MCPToolError(
+            code="module_disabled",
+            message="Module 'redis' is disabled",
+            details={"module": "redis"},
+        )
 
     query = GetCacheEntryQuery(key=arguments["key"])
-    return (await handler.handle(query)).model_dump()
+    result = await handler.handle(query)
+    if not result.entry.found:
+        raise MCPToolError(
+            code="cache_not_found",
+            message=f"Cache key '{arguments['key']}' was not found",
+            details={"key": arguments["key"]},
+        )
+    return result.model_dump()
 
 
 async def cache_delete_tool(
@@ -51,7 +67,11 @@ async def cache_delete_tool(
     """Delete cache entry in Redis."""
     handler = container.delete_cache_entry_handler
     if handler is None:
-        return {"error": "Redis module is disabled"}
+        raise MCPToolError(
+            code="module_disabled",
+            message="Module 'redis' is disabled",
+            details={"module": "redis"},
+        )
 
     command = DeleteCacheEntryCommand(key=arguments["key"])
     return (await handler.handle(command)).model_dump()

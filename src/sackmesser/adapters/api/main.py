@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from orchid_commons import create_fastapi_observability_middleware, load_config
 
+from sackmesser.adapters.api.error_handler import register_exception_handlers
 from sackmesser.adapters.api.routes import load_routers
 from sackmesser.adapters.dependencies import init_services, shutdown_services
 from sackmesser.infrastructure.runtime.modules import (
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
         description="Orchid skills template with strict hexagonal modules",
         lifespan=lifespan,
     )
+    register_exception_handlers(app)
 
     app.add_middleware(
         CORSMiddleware,

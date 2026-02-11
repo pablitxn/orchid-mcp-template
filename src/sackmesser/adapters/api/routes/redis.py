@@ -1,9 +1,10 @@
 """Redis cache API routes."""
 
-from fastapi import APIRouter, HTTPException, Path, status
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Path
 
 from sackmesser.adapters.dependencies import ContainerDep
+from sackmesser.adapters.api.schemas import SetCacheRequest
+from sackmesser.application.errors import DisabledModuleError, NotFoundError
 from sackmesser.application.redis import (
     DeleteCacheEntryCommand,
     GetCacheEntryQuery,
@@ -11,13 +12,6 @@ from sackmesser.application.redis import (
 )
 
 router = APIRouter(prefix="/api/v1/cache")
-
-
-class SetCacheRequest(BaseModel):
-    """Request body for cache set operation."""
-
-    value: str = Field(min_length=1)
-    ttl_seconds: int | None = Field(default=None, ge=1)
 
 
 @router.put("/{key}")
@@ -29,10 +23,7 @@ async def set_cache(
     """Set cache entry in Redis."""
     handler = container.set_cache_entry_handler
     if handler is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Redis module is disabled",
-        )
+        raise DisabledModuleError("redis")
 
     result = await handler.handle(
         SetCacheEntryCommand(key=key, value=body.value, ttl_seconds=body.ttl_seconds)
@@ -48,15 +39,16 @@ async def get_cache(
     """Get cache entry from Redis."""
     handler = container.get_cache_entry_handler
     if handler is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Redis module is disabled",
-        )
+        raise DisabledModuleError("redis")
 
     result = await handler.handle(GetCacheEntryQuery(key=key))
     payload = result.model_dump()
     if not result.entry.found:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=payload)
+        raise NotFoundError(
+            f"Cache key '{key}' was not found",
+            code="cache_not_found",
+            details={"key": key},
+        )
     return payload
 
 
@@ -68,10 +60,7 @@ async def delete_cache(
     """Delete cache entry from Redis."""
     handler = container.delete_cache_entry_handler
     if handler is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Redis module is disabled",
-        )
+        raise DisabledModuleError("redis")
 
     result = await handler.handle(DeleteCacheEntryCommand(key=key))
     return result.model_dump()

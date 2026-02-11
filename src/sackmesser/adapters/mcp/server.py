@@ -10,6 +10,7 @@ from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool
 
+from sackmesser.adapters.mcp.errors import MCPToolError
 from sackmesser.adapters.mcp.tools import load_tool_specs
 from sackmesser.infrastructure.runtime import (
     get_runtime_container,
@@ -51,8 +52,16 @@ def create_mcp_server() -> Server:
 
         try:
             result = await tool.handler(container, arguments)
+        except MCPToolError as exc:
+            result = exc.to_payload()
         except Exception as exc:
-            result = {"error": str(exc), "tool": name}
+            result = {
+                "error": {
+                    "code": "internal_error",
+                    "message": "An unexpected error occurred",
+                    "details": {"tool": name, "exception_type": exc.__class__.__name__},
+                }
+            }
 
         return [TextContent(type="text", text=json.dumps(result, default=str))]
 
