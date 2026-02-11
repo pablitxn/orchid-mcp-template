@@ -53,6 +53,32 @@ uv run sackmesser
 uv run sackmesser --mcp
 ```
 
+## Testing
+
+Suite rapida (unit + e2e):
+
+```bash
+PYTHONPATH=src uv run --extra dev pytest -q tests/unit tests/e2e
+```
+
+Suite de integracion (requiere servicios levantados):
+
+```bash
+PYTHONPATH=src uv run --extra dev pytest -q -m integration tests/integration
+```
+
+Coverage oficial:
+
+```bash
+PYTHONPATH=src uv run --extra dev pytest -q --cov=src/sackmesser --cov-report=term-missing tests/unit tests/e2e
+```
+
+Coverage con gate (alineado a CI):
+
+```bash
+PYTHONPATH=src uv run --extra dev pytest -q --cov=src/sackmesser --cov-report=term-missing --cov-fail-under=75 tests/unit tests/e2e
+```
+
 ## Endpoints incluidos
 
 - `GET /health`
