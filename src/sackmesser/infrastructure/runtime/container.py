@@ -65,7 +65,7 @@ async def build_container(
             CreateWorkflowCommand,
             ListWorkflowsQuery,
         )
-        from sackmesser.infrastructure.postgres.workflow_repository import (
+        from sackmesser.infrastructure.db.postgres.workflow_repository import (
             PostgresWorkflowRepository,
         )
 
@@ -93,7 +93,9 @@ async def build_container(
             GetCacheEntryQuery,
             SetCacheEntryCommand,
         )
-        from sackmesser.infrastructure.redis.cache_repository import RedisCacheRepository
+        from sackmesser.infrastructure.db.redis.cache_repository import (
+            RedisCacheRepository,
+        )
 
         redis_cache = cast("RedisCache", manager.get("redis"))
         cache_repository = RedisCacheRepository(redis_cache)

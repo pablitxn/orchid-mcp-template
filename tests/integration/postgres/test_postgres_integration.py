@@ -5,7 +5,9 @@ from __future__ import annotations
 import pytest
 from orchid_commons import PostgresProvider, PostgresSettings
 
-from sackmesser.infrastructure.postgres.workflow_repository import PostgresWorkflowRepository
+from sackmesser.infrastructure.db.postgres.workflow_repository import (
+    PostgresWorkflowRepository,
+)
 
 
 @pytest.mark.integration

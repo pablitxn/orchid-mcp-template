@@ -1436,6 +1436,7 @@ dependencies = [
     { name = "mcp" },
     { name = "orchid-skills-commons", extra = ["blob", "db", "observability"] },
     { name = "pydantic" },
+    { name = "pytest" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -1457,6 +1458,7 @@ requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.13.0" },
     { name = "orchid-skills-commons", extras = ["db", "blob", "observability"], git = "ssh://git@github.com/pablitxn/orchid-skills-commons.git" },
     { name = "pydantic", specifier = ">=2.0" },
+    { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.0" },

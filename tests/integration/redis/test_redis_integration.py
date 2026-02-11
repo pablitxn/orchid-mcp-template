@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from orchid_commons import RedisCache, RedisSettings
 
-from sackmesser.infrastructure.redis.cache_repository import RedisCacheRepository
+from sackmesser.infrastructure.db.redis.cache_repository import RedisCacheRepository
 
 
 @pytest.mark.integration
