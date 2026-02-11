@@ -13,12 +13,22 @@ import json
 import shutil
 import sys
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 MANIFEST_PATH = Path("template/module-manifest.json")
 ENABLED_MODULES_PATH = Path("config/enabled_modules.json")
+APPSETTINGS_PATH = Path("config/appsettings.json")
+DOCKER_COMPOSE_PATH = Path("docker-compose.yml")
+
+RESOURCE_KEYS_BY_MODULE: dict[str, tuple[str, ...]] = {
+    "postgres": ("postgres",),
+    "redis": ("redis",),
+    "blob": ("minio", "r2", "multi_bucket"),
+    "mongodb": ("mongodb",),
+    "qdrant": ("qdrant",),
+    "rabbitmq": ("rabbitmq",),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,7 +149,6 @@ def prune_disabled_modules(
 def write_enabled_modules(enabled: set[str], output_path: Path, *, dry_run: bool) -> None:
     payload: dict[str, Any] = {
         "schema_version": 1,
-        "generated_at": datetime.now(UTC).isoformat(),
         "enabled_modules": sorted(enabled),
     }
 
@@ -151,6 +160,128 @@ def write_enabled_modules(enabled: set[str], output_path: Path, *, dry_run: bool
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote: {output_path}")
+
+
+def sync_appsettings_resources(
+    enabled_modules: set[str],
+    *,
+    appsettings_path: Path,
+    dry_run: bool,
+) -> None:
+    if not appsettings_path.exists():
+        print(f"skip sync appsettings (missing): {appsettings_path}")
+        return
+
+    data = json.loads(appsettings_path.read_text(encoding="utf-8"))
+    resources = data.get("resources")
+    if not isinstance(resources, dict):
+        print(f"skip sync appsettings (invalid resources): {appsettings_path}")
+        return
+
+    managed_keys = {
+        key
+        for keys in RESOURCE_KEYS_BY_MODULE.values()
+        for key in keys
+    }
+    selected_keys = {
+        key
+        for module_name in enabled_modules
+        for key in RESOURCE_KEYS_BY_MODULE.get(module_name, ())
+    }
+
+    preserved = {k: v for k, v in resources.items() if k not in managed_keys}
+    selected = {k: v for k, v in resources.items() if k in selected_keys}
+    data["resources"] = {**preserved, **selected}
+
+    if dry_run:
+        print(f"[dry-run] would sync resources in {appsettings_path}")
+        return
+
+    appsettings_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    print(f"Synced resources in: {appsettings_path}")
+
+
+def build_docker_compose(enabled_modules: set[str]) -> str:
+    lines: list[str] = []
+    has_service = False
+
+    if "postgres" not in enabled_modules and "redis" not in enabled_modules:
+        lines.append("services: {}")
+    else:
+        lines.append("services:")
+
+    if "postgres" in enabled_modules:
+        has_service = True
+        lines.extend(
+            [
+                "  postgres:",
+                "    image: postgres:16",
+                "    container_name: orchid-template-postgres",
+                "    environment:",
+                "      POSTGRES_DB: ${POSTGRES_DB:-orchid_template}",
+                "      POSTGRES_USER: ${POSTGRES_USER:-orchid}",
+                "      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-orchid}",
+                '    ports:',
+                '      - "5432:5432"',
+                "    volumes:",
+                "      - postgres_data:/var/lib/postgresql/data",
+                "    healthcheck:",
+                '      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-orchid} -d ${POSTGRES_DB:-orchid_template}"]',
+                "      interval: 5s",
+                "      timeout: 5s",
+                "      retries: 10",
+                "",
+            ]
+        )
+
+    if "redis" in enabled_modules:
+        has_service = True
+        lines.extend(
+            [
+                "  redis:",
+                "    image: redis:7",
+                "    container_name: orchid-template-redis",
+                '    ports:',
+                '      - "6379:6379"',
+                '    command: ["redis-server", "--appendonly", "yes"]',
+                "    volumes:",
+                "      - redis_data:/data",
+                "    healthcheck:",
+                '      test: ["CMD", "redis-cli", "ping"]',
+                "      interval: 5s",
+                "      timeout: 5s",
+                "      retries: 10",
+                "",
+            ]
+        )
+
+    if "postgres" not in enabled_modules and "redis" not in enabled_modules:
+        lines.append("volumes: {}")
+        return "\n".join(lines) + "\n"
+
+    lines.append("volumes:")
+    if "postgres" in enabled_modules:
+        lines.append("  postgres_data:")
+    if "redis" in enabled_modules:
+        lines.append("  redis_data:")
+    if not has_service:
+        lines.append("  {}")
+
+    return "\n".join(lines) + "\n"
+
+
+def sync_docker_compose(
+    enabled_modules: set[str],
+    *,
+    compose_path: Path,
+    dry_run: bool,
+) -> None:
+    content = build_docker_compose(enabled_modules)
+    if dry_run:
+        print(f"[dry-run] would sync {compose_path}")
+        return
+    compose_path.write_text(content, encoding="utf-8")
+    print(f"Synced: {compose_path}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -184,6 +315,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="Preview changes without writing/deleting files.",
+    )
+    parser.add_argument(
+        "--no-sync-config",
+        action="store_true",
+        help="Do not sync config/appsettings.json resources with selected modules.",
+    )
+    parser.add_argument(
+        "--no-sync-compose",
+        action="store_true",
+        help="Do not rewrite docker-compose.yml based on selected modules.",
     )
     return parser
 
@@ -222,6 +363,20 @@ def main() -> int:
 
     print("")
     write_enabled_modules(enabled, args.output, dry_run=args.dry_run)
+
+    if not args.no_sync_config:
+        sync_appsettings_resources(
+            enabled,
+            appsettings_path=APPSETTINGS_PATH,
+            dry_run=args.dry_run,
+        )
+
+    if not args.no_sync_compose:
+        sync_docker_compose(
+            enabled,
+            compose_path=DOCKER_COMPOSE_PATH,
+            dry_run=args.dry_run,
+        )
 
     if args.prune:
         print("")
