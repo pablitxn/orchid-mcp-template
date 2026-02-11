@@ -37,8 +37,9 @@ def create_mcp_server() -> Server:
     tool_map = {spec.name: spec for spec in tool_specs}
 
     server = Server(state.settings.service.name)
+    server_any: Any = server
 
-    @server.list_tools()
+    @server_any.list_tools()  # type: ignore[untyped-decorator]
     async def list_tools() -> list[Tool]:
         return [
             Tool(
@@ -49,7 +50,7 @@ def create_mcp_server() -> Server:
             for tool in tool_specs
         ]
 
-    @server.call_tool()
+    @server_any.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(
         name: str,
         arguments: dict[str, Any],

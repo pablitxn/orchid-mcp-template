@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from sackmesser.adapters.mcp.errors import MCPToolError
 from sackmesser.application.requests.cache import (
@@ -32,7 +32,8 @@ async def cache_set_tool(
         value=arguments["value"],
         ttl_seconds=arguments.get("ttl_seconds"),
     )
-    return (await container.command_bus.dispatch(command)).model_dump()
+    result = await container.command_bus.dispatch(command)
+    return cast("dict[str, Any]", result.model_dump())
 
 
 async def cache_get_tool(
@@ -55,7 +56,7 @@ async def cache_get_tool(
             message=f"Cache key '{arguments['key']}' was not found",
             details={"key": arguments["key"]},
         )
-    return result.model_dump()
+    return cast("dict[str, Any]", result.model_dump())
 
 
 async def cache_delete_tool(
@@ -71,7 +72,8 @@ async def cache_delete_tool(
         )
 
     command = DeleteCacheEntryCommand(key=arguments["key"])
-    return (await container.command_bus.dispatch(command)).model_dump()
+    result = await container.command_bus.dispatch(command)
+    return cast("dict[str, Any]", result.model_dump())
 
 
 def get_tool_specs() -> list[ToolSpec]:
