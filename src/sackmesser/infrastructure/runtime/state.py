@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, cast
 
 from orchid_commons import (
     ResourceManager,
@@ -117,7 +118,7 @@ async def startup_runtime(*, env: str | None = None) -> RuntimeState:
 
     manager = ResourceManager()
     required_resources = required_resource_names(enabled_modules)
-    await manager.startup(selected_resource_settings, required=required_resources)
+    await manager.startup(cast(Any, selected_resource_settings), required=required_resources)
 
     container = await build_container(
         settings=settings,

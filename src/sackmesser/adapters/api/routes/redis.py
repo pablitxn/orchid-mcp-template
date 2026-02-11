@@ -1,8 +1,10 @@
 """Redis cache API routes."""
 
+from typing import cast
+
 from fastapi import APIRouter, Path
 
-from sackmesser.adapters.api.schemas import SetCacheRequest
+from sackmesser.adapters.api.schemas.redis import SetCacheRequest
 from sackmesser.adapters.dependencies import ContainerDep
 from sackmesser.application.errors import DisabledModuleError, NotFoundError
 from sackmesser.application.requests.cache import (
@@ -27,7 +29,7 @@ async def set_cache(
     result = await container.command_bus.dispatch(
         SetCacheEntryCommand(key=key, value=body.value, ttl_seconds=body.ttl_seconds)
     )
-    return result.model_dump()
+    return cast("dict[str, object]", result.model_dump())
 
 
 @router.get("/{key}")
@@ -40,7 +42,7 @@ async def get_cache(
         raise DisabledModuleError("redis")
 
     result = await container.query_bus.dispatch(GetCacheEntryQuery(key=key))
-    payload = result.model_dump()
+    payload = cast("dict[str, object]", result.model_dump())
     if not result.entry.found:
         raise NotFoundError(
             f"Cache key '{key}' was not found",
@@ -60,4 +62,4 @@ async def delete_cache(
         raise DisabledModuleError("redis")
 
     result = await container.command_bus.dispatch(DeleteCacheEntryCommand(key=key))
-    return result.model_dump()
+    return cast("dict[str, object]", result.model_dump())

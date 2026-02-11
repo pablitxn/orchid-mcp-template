@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from sackmesser.adapters.mcp.errors import MCPToolError
 from sackmesser.application.requests.workflows import (
@@ -30,7 +30,8 @@ async def create_workflow_tool(
         title=arguments["title"],
         payload=arguments.get("payload", {}),
     )
-    return (await container.command_bus.dispatch(command)).model_dump()
+    result = await container.command_bus.dispatch(command)
+    return cast("dict[str, Any]", result.model_dump())
 
 
 async def list_workflows_tool(
@@ -49,7 +50,8 @@ async def list_workflows_tool(
         limit=arguments.get("limit", 20),
         offset=arguments.get("offset", 0),
     )
-    return (await container.query_bus.dispatch(query)).model_dump()
+    result = await container.query_bus.dispatch(query)
+    return cast("dict[str, Any]", result.model_dump())
 
 
 def get_tool_specs() -> list[ToolSpec]:

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from fastapi import APIRouter, Query, status
 
-from sackmesser.adapters.api.schemas import CreateWorkflowRequest
+from sackmesser.adapters.api.schemas.postgres import CreateWorkflowRequest
 from sackmesser.adapters.dependencies import ContainerDep
 from sackmesser.application.errors import DisabledModuleError
 from sackmesser.application.requests.workflows import (
@@ -27,7 +29,7 @@ async def create_workflow(
     result = await container.command_bus.dispatch(
         CreateWorkflowCommand(title=body.title, payload=body.payload)
     )
-    return result.model_dump()
+    return cast("dict[str, object]", result.model_dump())
 
 
 @router.get("")
@@ -43,4 +45,4 @@ async def list_workflows(
     result = await container.query_bus.dispatch(
         ListWorkflowsQuery(limit=limit, offset=offset)
     )
-    return result.model_dump()
+    return cast("dict[str, object]", result.model_dump())

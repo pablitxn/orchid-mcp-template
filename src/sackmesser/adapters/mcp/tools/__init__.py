@@ -22,7 +22,7 @@ def load_tool_specs(enabled_modules: Iterable[str]) -> list[ToolSpec]:
         if module_path is None:
             continue
         module = import_module(module_path)
-        module_specs = getattr(module, "get_tool_specs", lambda: [])()
+        module_specs: list[ToolSpec] = getattr(module, "get_tool_specs", lambda: [])()
         specs.extend(module_specs)
     return specs
 

@@ -66,6 +66,8 @@ Resultado:
 - CI ejecuta `tests/unit tests/e2e` con coverage.
 - Gate activo en CI: `--cov-fail-under=85`.
 - CI ejecuta `tests/integration` en job dedicado con servicios `postgres` + `redis`.
+- CI ejecuta `ruff` completo sobre `src tests`.
+- CI ejecuta `mypy` sobre todo `src/sackmesser`.
 - `README.md` actualizado con comandos oficiales de:
   - unit + e2e
   - integration
@@ -213,6 +215,10 @@ PYTHONPATH=src uv run --extra dev pytest -q \
 Estado aplicado:
 
 ```yaml
+- name: Run Ruff
+  run: uv run ruff check src tests
+- name: Run mypy
+  run: PYTHONPATH=src uv run mypy src/sackmesser
 - name: Run unit + e2e with coverage gate
   run: PYTHONPATH=src uv run pytest -q --cov=src/sackmesser --cov-report=term-missing --cov-fail-under=85 tests/unit tests/e2e
 - name: Run integration tests
