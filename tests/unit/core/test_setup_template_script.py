@@ -90,12 +90,81 @@ def test_sync_appsettings_resources_filters_managed_keys(tmp_path: Path) -> None
     payload = json.loads(appsettings_path.read_text(encoding="utf-8"))
     assert set(payload["resources"]) == {"custom", "postgres"}
     assert payload["resources"]["custom"]["enabled"] is True
+    assert payload["observability"]["enabled"] is False
+    assert payload["observability"]["langfuse"]["enabled"] is False
+
+
+def test_sync_appsettings_resources_adds_defaults_for_new_modules(tmp_path: Path) -> None:
+    appsettings_path = tmp_path / "appsettings.json"
+    appsettings_path.write_text(
+        json.dumps(
+            {
+                "service": {"name": "demo"},
+                "resources": {"custom": {"enabled": True}},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    setup_template.sync_appsettings_resources(
+        {"core", "blob", "mongodb"},
+        appsettings_path=appsettings_path,
+        dry_run=False,
+    )
+
+    payload = json.loads(appsettings_path.read_text(encoding="utf-8"))
+    assert set(payload["resources"]) == {"custom", "minio", "mongodb", "multi_bucket", "r2"}
+    assert payload["resources"]["minio"]["endpoint"] == "localhost:9000"
+    assert payload["resources"]["mongodb"]["uri"] == "mongodb://localhost:27017"
+    assert payload["resources"]["r2"] is None
+    assert payload["resources"]["multi_bucket"] is None
+
+
+def test_sync_appsettings_resources_keeps_observability_on_when_module_selected(
+    tmp_path: Path,
+) -> None:
+    appsettings_path = tmp_path / "appsettings.json"
+    appsettings_path.write_text(
+        json.dumps(
+            {
+                "service": {"name": "demo"},
+                "resources": {},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    setup_template.sync_appsettings_resources(
+        {"core", "observability"},
+        appsettings_path=appsettings_path,
+        dry_run=False,
+    )
+
+    payload = json.loads(appsettings_path.read_text(encoding="utf-8"))
+    assert payload["observability"]["enabled"] is True
+    assert payload["observability"]["langfuse"]["enabled"] is False
 
 
 def test_build_docker_compose_for_core_only_has_empty_services() -> None:
     content = setup_template.build_docker_compose({"core"})
     assert "services: {}" in content
     assert "volumes: {}" in content
+
+
+def test_build_docker_compose_for_full_stack_contains_extended_services() -> None:
+    content = setup_template.build_docker_compose(
+        {"core", "postgres", "redis", "mongodb", "qdrant", "rabbitmq", "blob"}
+    )
+    assert "  postgres:" in content
+    assert "  redis:" in content
+    assert "  mongodb:" in content
+    assert "  qdrant:" in content
+    assert "  rabbitmq:" in content
+    assert "  minio:" in content
+    assert "  mongodb_data:" in content
+    assert "  qdrant_data:" in content
+    assert "  rabbitmq_data:" in content
+    assert "  minio_data:" in content
 
 
 def test_prune_disabled_modules_dry_run_does_not_delete(tmp_path: Path) -> None:
@@ -119,3 +188,83 @@ def test_prune_disabled_modules_dry_run_does_not_delete(tmp_path: Path) -> None:
 
     assert actions == [f"would remove: {target}"]
     assert target.exists()
+
+
+def test_load_manifest_rejects_absolute_prune_path(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "modules": {
+                    "core": {"required": True, "depends_on": [], "prune_paths": []},
+                    "redis": {
+                        "required": False,
+                        "depends_on": ["core"],
+                        "prune_paths": ["/tmp/evil"],
+                    },
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="absolute/invalid prune path"):
+        setup_template.load_manifest(manifest_path)
+
+
+def test_load_manifest_rejects_duplicate_prune_paths(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "modules": {
+                    "core": {"required": True, "depends_on": [], "prune_paths": []},
+                    "redis": {
+                        "required": False,
+                        "depends_on": ["core"],
+                        "prune_paths": ["src/sackmesser/shared"],
+                    },
+                    "postgres": {
+                        "required": False,
+                        "depends_on": ["core"],
+                        "prune_paths": ["src/sackmesser/shared"],
+                    },
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="duplicate prune path"):
+        setup_template.load_manifest(manifest_path)
+
+
+def test_find_missing_optional_dependencies_by_module(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _fake_find_spec(name: str) -> object | None:
+        if name in {"asyncpg", "aio_pika"}:
+            return None
+        return object()
+
+    monkeypatch.setattr(setup_template, "find_spec", _fake_find_spec)
+    missing = setup_template.find_missing_optional_dependencies(
+        {"core", "postgres", "rabbitmq", "redis"}
+    )
+
+    assert missing == {
+        "postgres": ("asyncpg",),
+        "rabbitmq": ("aio_pika",),
+    }
+
+
+def test_print_dependency_diagnostics_strict_returns_failure(capsys: pytest.CaptureFixture[str]) -> None:
+    should_fail = setup_template.print_dependency_diagnostics(
+        {"postgres": ("asyncpg",)},
+        strict=True,
+    )
+    output = capsys.readouterr().out
+
+    assert should_fail is True
+    assert "install hint" in output
+    assert "--extra db" in output
